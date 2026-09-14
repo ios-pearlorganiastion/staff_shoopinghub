@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Search, Plus, Pencil, Trash2, Eye, ImageOff, Package } from "lucide-react";
 import ProductModal from "../components/products/ProductModal";
-import ProductDetailModal from "../components/products/ProductDetailModal";
+import ProductDetailModal from "../components/products/ProductDetailModa";
 import AddVariantModal from "../components/products/AddVariantModal";
 import ReceiveStockModal from "../components/products/ReceiveStockModal";
 import Button from "../components/ui/Button";
