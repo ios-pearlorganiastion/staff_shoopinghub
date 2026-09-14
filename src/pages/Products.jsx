@@ -9,7 +9,7 @@ import Badge from "../components/ui/Badge";
 import { Card } from "../components/ui/Card";
 import EmptyState from "../components/ui/EmptyState";
 import Modal from "../components/ui/Modal";
-import { useToast } from "../components/ui/Toast";
+import { useToast } from "../components/ui/Toast"; 
 import {
   getCategories,
   getBrands,
