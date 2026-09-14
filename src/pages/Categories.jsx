@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Search,
   Plus,
@@ -6,6 +6,7 @@ import {
   Trash2,
   Eye,
   Image as ImageIcon,
+  ImagePlus,
   Package,
   CheckCircle2,
   XCircle,
@@ -39,6 +40,7 @@ const EMPTY_FORM = { name: "", slug: "", description: "", isActive: true };
 
 export default function Categories() {
   const showToast = useToast();
+  const fileInputRef = useRef(null);
 
   const [categories, setCategories] = useState([]);
   const [productCounts, setProductCounts] = useState({});
@@ -57,6 +59,8 @@ export default function Categories() {
 
   const [form, setForm] = useState(EMPTY_FORM);
   const [slugTouched, setSlugTouched] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState("");
 
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
@@ -132,6 +136,8 @@ export default function Categories() {
     setForm(EMPTY_FORM);
     setSlugTouched(false);
     setFormError("");
+    setImageFile(null);
+    setImagePreview("");
     setModalOpen(true);
   };
 
@@ -145,7 +151,18 @@ export default function Categories() {
     });
     setSlugTouched(true); // existing categories already have a slug — don't auto-overwrite it
     setFormError("");
+    setImageFile(null);
+    setImagePreview(category.imageUrl || "");
     setModalOpen(true);
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
   };
 
   const handleFormChange = (e) => {
@@ -169,23 +186,19 @@ export default function Categories() {
     try {
       setSaving(true);
 
+      const formData = new FormData();
+      formData.append("name", form.name.trim());
+      formData.append("slug", form.slug.trim());
+      formData.append("description", form.description.trim());
+      if (imageFile) formData.append("image", imageFile);
+
       if (editingCategory) {
-        await updateCategory(editingCategory.id, {
-          name: form.name.trim(),
-          slug: form.slug.trim(),
-          description: form.description.trim(),
-          isActive: form.isActive,
-        });
+        formData.append("isActive", String(form.isActive));
+        await updateCategory(editingCategory.id, formData);
         showToast("Category updated successfully");
       } else {
-        const payload = {
-          name: form.name.trim(),
-          slug: form.slug.trim(),
-          description: form.description.trim(),
-        };
-        if (!form.isActive) payload.isActive = false; // only sent when it deviates from the backend default
-
-        await createCategory(payload);
+        if (!form.isActive) formData.append("isActive", "false"); // only sent when it deviates from the backend default
+        await createCategory(formData);
         showToast("Category created successfully");
       }
 
@@ -316,8 +329,12 @@ export default function Categories() {
                       <tr key={category.id} className="border-b border-line/70 last:border-0 hover:bg-paper/50 transition">
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 rounded-lg bg-paper flex items-center justify-center shrink-0">
-                              <ImageIcon className="w-5 h-5 text-ink-faint" />
+                            <div className="w-12 h-12 rounded-lg bg-paper border border-line flex items-center justify-center shrink-0 overflow-hidden">
+                              {category.imageUrl ? (
+                                <img src={category.imageUrl} alt={category.name} className="w-full h-full object-cover" />
+                              ) : (
+                                <ImageIcon className="w-5 h-5 text-ink-faint" />
+                              )}
                             </div>
                             <div>
                               <p className="text-sm font-bold text-ink">{category.name}</p>
@@ -368,8 +385,12 @@ export default function Categories() {
               return (
                 <Card key={category.id} className="p-4">
                   <div className="flex items-start gap-3">
-                    <div className="w-14 h-14 rounded-lg bg-paper shrink-0 flex items-center justify-center">
-                      <ImageIcon className="w-5 h-5 text-ink-faint" />
+                    <div className="w-14 h-14 rounded-lg bg-paper border border-line shrink-0 flex items-center justify-center overflow-hidden">
+                      {category.imageUrl ? (
+                        <img src={category.imageUrl} alt={category.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <ImageIcon className="w-5 h-5 text-ink-faint" />
+                      )}
                     </div>
 
                     <div className="flex-1 min-w-0">
@@ -436,6 +457,36 @@ export default function Categories() {
               <Textarea name="description" value={form.description} onChange={handleFormChange} placeholder="Enter category description" />
             </Field>
 
+            <Field label="Category photo">
+              <div className="flex items-center gap-3">
+                {imagePreview ? (
+                  <div className="relative w-16 h-16 rounded-lg overflow-hidden border border-line bg-paper shrink-0">
+                    <img src={imagePreview} alt="Category" className="w-full h-full object-cover" />
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-16 h-16 rounded-lg border-2 border-dashed border-line text-ink-soft flex items-center justify-center hover:border-brand-500 hover:text-brand-700 shrink-0"
+                  >
+                    <ImagePlus className="w-5 h-5" />
+                  </button>
+                )}
+
+                <Button type="button" variant="secondary" size="sm" onClick={() => fileInputRef.current?.click()}>
+                  {imagePreview ? "Change photo" : "Add photo"}
+                </Button>
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleImageChange}
+                  className="hidden"
+                />
+              </div>
+            </Field>
+
             <Field label="Status">
               <Select
                 name="isActive"
@@ -453,6 +504,14 @@ export default function Categories() {
       {/* View modal */}
       {viewModalOpen && selectedCategory && (
         <Modal title={selectedCategory.name} description={selectedCategory.slug} onClose={() => setViewModalOpen(false)} width="sm">
+          <div className="w-full h-36 rounded-lg bg-paper border border-line overflow-hidden flex items-center justify-center mb-4">
+            {selectedCategory.imageUrl ? (
+              <img src={selectedCategory.imageUrl} alt={selectedCategory.name} className="w-full h-full object-cover" />
+            ) : (
+              <ImageIcon className="w-8 h-8 text-ink-faint" />
+            )}
+          </div>
+
           <div className="flex items-center justify-between gap-3 mb-4">
             <Badge tone={selectedCategory.isActive !== false ? "brand" : "rose"}>
               {selectedCategory.isActive !== false ? "active" : "inactive"}

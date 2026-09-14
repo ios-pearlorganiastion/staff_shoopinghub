@@ -15,6 +15,9 @@ import { Field, Input, Select, Textarea } from "../ui/Field";
 let tempImageId = 0;
 const nextTempId = () => `temp-${Date.now()}-${tempImageId++}`;
 
+const slugify = (value) =>
+  value.toString().trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+
 const UNIT_OPTIONS = ["G", "KG", "ML", "L", "PCS"];
 
 export default function ProductModal({ categories, brands, product, onClose, onSuccess }) {
@@ -43,6 +46,7 @@ export default function ProductModal({ categories, brands, product, onClose, onS
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [slugTouched, setSlugTouched] = useState(false);
 
   const [bulkCategoryId, setBulkCategoryId] = useState("");
   const [bulkBrandId, setBulkBrandId] = useState("");
@@ -81,6 +85,8 @@ export default function ProductModal({ categories, brands, product, onClose, onS
         }))
       );
 
+      setSlugTouched(true);
+
       const existingImages =
         Array.isArray(product.images) && product.images.length
           ? product.images
@@ -108,6 +114,7 @@ export default function ProductModal({ categories, brands, product, onClose, onS
       setVariants([]);
       setImages([]);
       setMode("single");
+      setSlugTouched(false);
       setBulkCategoryId(categories?.[0]?.id || "");
       setBulkBrandId("");
       setBulkFile(null);
@@ -118,7 +125,17 @@ export default function ProductModal({ categories, brands, product, onClose, onS
     setError("");
   }, [product, categories]);
 
-  const update = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
+  const update = (key, value) =>
+    setForm((prev) => {
+      const next = { ...prev, [key]: value };
+      if (key === "name" && !slugTouched) next.slug = slugify(value);
+      return next;
+    });
+
+  const updateSlug = (value) => {
+    setSlugTouched(true);
+    update("slug", value);
+  };
 
   const updateVariant = (variantId, key, value) =>
     setVariants((prev) =>
@@ -456,8 +473,8 @@ export default function ProductModal({ categories, brands, product, onClose, onS
           </Field>
 
           <div className="grid sm:grid-cols-2 gap-x-4">
-            <Field label="Slug" hint="Leave blank to auto-generate.">
-              <Input value={form.slug} onChange={(e) => update("slug", e.target.value)} placeholder="product-slug" />
+            <Field label="Slug" hint="Automatically generated from the product name.">
+              <Input value={form.slug} onChange={(e) => updateSlug(e.target.value)} placeholder="product-slug" />
             </Field>
 
             <Field label="Brand">
