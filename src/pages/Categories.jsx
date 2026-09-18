@@ -457,7 +457,7 @@ export default function Categories() {
               <Textarea name="description" value={form.description} onChange={handleFormChange} placeholder="Enter category description" />
             </Field>
 
-            <Field label="Category photo">
+            <Field label="Category photo" hint="Supports JPG, PNG or WEBP.">
               <div className="flex items-center gap-3">
                 {imagePreview ? (
                   <div className="relative w-16 h-16 rounded-lg overflow-hidden border border-line bg-paper shrink-0">

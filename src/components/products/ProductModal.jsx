@@ -319,7 +319,7 @@ export default function ProductModal({ categories, brands, product, onClose, onS
     setBulkResult(null);
 
     if (!bulkCategoryId) return setBulkError("Please select a category for this batch.");
-    if (!bulkFile) return setBulkError("Please choose a CSV file to import.");
+    if (!bulkFile) return setBulkError("Please choose a file to import.");
 
     try {
       setBulkLoading(true);
@@ -385,7 +385,7 @@ export default function ProductModal({ categories, brands, product, onClose, onS
             icon={Upload}
             onClick={() => setMode("bulk")}
           >
-            Bulk import (CSV)
+            Bulk import (CSV / Excel)
           </Button>
         </div>
       )}
@@ -412,7 +412,7 @@ export default function ProductModal({ categories, brands, product, onClose, onS
           )}
 
           <p className="text-xs text-ink-soft mb-4">
-            Every row in the CSV is created under the category (and brand, if chosen)
+            Every row in the file is created under the category (and brand, if chosen)
             selected below. Expected columns: Name, Description, SKU, MRP, SellingPrice,
             Unit, Weight, InitialStock, ImageUrl.
           </p>
@@ -437,16 +437,16 @@ export default function ProductModal({ categories, brands, product, onClose, onS
             </Field>
           </div>
 
-          <Field label="CSV file">
+          <Field label="Import file" hint="Supports CSV or Excel (.xlsx / .xls) files.">
             <div className="flex items-center gap-3">
               <Button type="button" variant="secondary" size="sm" onClick={() => csvInputRef.current?.click()}>
-                Choose CSV
+                Choose file
               </Button>
               <span className="text-sm text-ink-soft">{bulkFile ? bulkFile.name : "No file chosen"}</span>
               <input
                 ref={csvInputRef}
                 type="file"
-                accept=".csv,text/csv"
+                accept=".csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
                 onChange={(e) => {
                   setBulkFile(e.target.files?.[0] || null);
                   e.target.value = "";
@@ -513,7 +513,8 @@ export default function ProductModal({ categories, brands, product, onClose, onS
             <p className="text-xs uppercase tracking-wide text-ink-faint font-bold">Product photos</p>
             <span className="text-xs text-ink-soft">{images.length} photo{images.length !== 1 ? "s" : ""}</span>
           </div>
-          <p className="text-xs text-ink-soft mb-3">New photos upload automatically right after you save.</p>
+          <p className="text-xs text-ink-soft mb-1">New photos upload automatically right after you save.</p>
+          <p className="text-[11px] text-ink-faint mb-3">Supports JPG, PNG or WEBP.</p>
 
           <div className="flex flex-wrap gap-3 mb-1">
             {images.map((image, index) => (
