@@ -8,6 +8,8 @@ import {
   ShoppingBag,
   BarChart3,
   LockKeyhole,
+  CheckCircle2,
+  Sparkles,
 } from "lucide-react";
 import { staffLogin } from "../api/authApis";
 import { saveSession } from "../utils/auth";
@@ -57,7 +59,9 @@ export default function Login() {
       navigate("/dashboard", { replace: true });
     } catch (err) {
       const message =
-        err?.response?.data?.message || err?.message || "Unable to sign in. Please try again.";
+        err?.response?.data?.message ||
+        err?.message ||
+        "Unable to sign in. Please try again.";
 
       setError(Array.isArray(message) ? message.join(", ") : message);
     } finally {
@@ -66,134 +70,221 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-paper flex items-center justify-center p-4 sm:p-6">
-      <div className="w-full max-w-[1050px] min-h-[600px] bg-card rounded-2xl overflow-hidden shadow-float border border-line grid lg:grid-cols-2">
-        {/* Brand panel — desktop only */}
-        <div className="hidden lg:flex relative bg-brand-800 p-12 flex-col justify-between overflow-hidden">
-          <div className="absolute -top-28 -right-28 w-80 h-80 rounded-full bg-brand-500/10" />
-          <div className="absolute -bottom-32 -left-24 w-96 h-96 rounded-full bg-black/10" />
+    <div className="relative flex min-h-[100svh] w-full items-center justify-center overflow-x-hidden overflow-y-auto bg-[#f4f8f5] px-3 py-4 sm:px-5 sm:py-6 md:px-6">
+      <div className="pointer-events-none absolute -left-24 -top-24 h-48 w-48 rounded-full bg-brand-200/25 blur-3xl sm:h-60 sm:w-60" />
+      <div className="pointer-events-none absolute -bottom-24 -right-24 h-52 w-52 rounded-full bg-brand-300/20 blur-3xl sm:h-64 sm:w-64" />
 
-          <div className="relative z-10 flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-white flex items-center justify-center">
-              <ShoppingBag className="w-5 h-5 text-brand-800" />
-            </div>
-            <div>
-              <h2 className="text-white text-lg font-extrabold">CD Shopping Hub</h2>
-              <p className="text-brand-100/70 text-[10px] font-bold uppercase tracking-wider">
-                Admin Panel
-              </p>
-            </div>
-          </div>
+      <div className="relative my-auto w-full max-w-[1000px]">
+        <div className="grid w-full overflow-hidden rounded-[20px] border border-[#dce9df] bg-white shadow-[0_15px_50px_rgba(18,77,42,0.10)] sm:rounded-[24px] lg:grid-cols-[0.92fr_1.08fr]">
 
-          <div className="relative z-10">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/10 text-brand-50 text-xs font-semibold mb-6">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              Secure admin access
-            </div>
+          <div className="relative hidden min-h-[590px] overflow-hidden bg-gradient-to-br from-brand-800 via-brand-700 to-brand-600 p-8 lg:flex lg:flex-col xl:p-10">
+            <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full border-[42px] border-white/[0.04]" />
+            <div className="absolute -bottom-24 -left-20 h-64 w-64 rounded-full border-[48px] border-white/[0.04]" />
+            <div className="absolute right-10 top-1/3 h-24 w-24 rounded-full bg-brand-300/10 blur-2xl" />
 
-            <h1 className="text-white text-4xl xl:text-5xl font-extrabold leading-tight">
-              Manage your store.
-              <br />
-              <span className="text-brand-200">Grow your business.</span>
-            </h1>
-
-            <p className="text-brand-50/70 text-sm leading-6 mt-5 max-w-[380px]">
-              Manage products, orders, customers and your entire shopping
-              operation from one dashboard.
-            </p>
-
-            <div className="mt-8 space-y-4">
-              <Feature icon={ShoppingBag} title="Manage orders" text="Track and fulfill customer orders" />
-              <Feature icon={BarChart3} title="Store analytics" text="Monitor how your store is performing" />
-              <Feature icon={LockKeyhole} title="Secure dashboard" text="Protected access for store staff" />
-            </div>
-          </div>
-
-          <p className="relative z-10 text-[11px] text-brand-50/50">
-            © 2026 CD Shopping Hub. All rights reserved.
-          </p>
-        </div>
-
-        {/* Form */}
-        <div className="flex items-center justify-center p-6 sm:p-10 lg:p-12">
-          <div className="w-full max-w-[380px]">
-            <div className="lg:hidden flex items-center gap-3 mb-8">
-              <div className="w-11 h-11 rounded-xl bg-brand-700 flex items-center justify-center">
-                <ShoppingBag className="w-5 h-5 text-white" />
+            <div className="relative z-10 flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-md">
+                <ShoppingBag className="h-[18px] w-[18px] text-brand-700" />
               </div>
+
               <div>
-                <h2 className="text-base font-extrabold text-ink">CD Shopping Hub</h2>
-                <p className="text-[10px] text-ink-faint font-bold uppercase tracking-wider">
+                <h2 className="text-base font-extrabold text-white">
+                  CD Shopping Hub
+                </h2>
+                <p className="mt-0.5 text-[8px] font-bold uppercase tracking-[0.18em] text-brand-100/70">
                   Admin Panel
                 </p>
               </div>
             </div>
 
-            <div className="w-12 h-12 rounded-xl bg-brand-50 flex items-center justify-center mb-5">
-              <LockKeyhole className="w-5 h-5 text-brand-700" />
+            <div className="relative z-10 my-auto py-8">
+              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-[9px] font-bold uppercase tracking-wide text-white backdrop-blur-sm">
+                <Sparkles className="h-3 w-3 text-brand-200" />
+                Store management
+              </div>
+
+              <h1 className="max-w-[420px] text-3xl font-extrabold leading-[1.1] tracking-tight text-white xl:text-[40px]">
+                Everything your store needs,
+                <span className="block text-brand-200">
+                  in one place.
+                </span>
+              </h1>
+
+              <p className="mt-4 max-w-[360px] text-xs leading-5 text-brand-50/70">
+                Manage products, orders, customers and store operations from
+                one powerful dashboard.
+              </p>
+
+              <div className="mt-7 grid max-w-[400px] grid-cols-2 gap-2.5">
+                <FeatureCard
+                  icon={ShoppingBag}
+                  title="Orders"
+                  text="Manage daily orders"
+                />
+
+                <FeatureCard
+                  icon={BarChart3}
+                  title="Analytics"
+                  text="Track store growth"
+                />
+
+                <FeatureCard
+                  icon={LockKeyhole}
+                  title="Security"
+                  text="Protected access"
+                />
+
+                <FeatureCard
+                  icon={CheckCircle2}
+                  title="Operations"
+                  text="Stay organized"
+                />
+              </div>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-ink">Welcome back</h1>
-            <p className="text-sm text-ink-soft mt-2 mb-7">
-              Sign in to access your admin dashboard.
-            </p>
+            <div className="relative z-10 flex items-center justify-between border-t border-white/10 pt-4">
+              <p className="text-[9px] text-white/40">
+                © 2026 CD Shopping Hub
+              </p>
 
-            {error && (
-              <div className="mb-5 px-4 py-3 rounded-lg bg-rose-50 border border-rose-500/20 text-rose-500 text-xs font-semibold">
-                {error}
+              <div className="flex items-center gap-1.5 text-[9px] font-semibold text-white/50">
+                <ShieldCheck className="h-3 w-3" />
+                Secure access
               </div>
-            )}
+            </div>
+          </div>
 
-            <form onSubmit={handleSubmit} autoComplete="off" spellCheck={false}>
-              <Field label="Username">
-                <Input
-                  autoComplete="off"
-                  value={username}
-                  onChange={clearErrorOnChange(setUsername)}
-                  disabled={loading}
-                  placeholder="Enter your username"
-                />
-              </Field>
+          <div className="flex min-h-[560px] w-full items-center justify-center px-4 py-7 sm:min-h-[590px] sm:px-8 sm:py-9 md:px-10 lg:px-10 xl:px-12">
+            <div className="w-full max-w-[360px]">
 
-              <Field label="Password">
-                <div className="relative">
-                  <Input
-                    type={showPassword ? "text" : "password"}
-                    autoComplete="new-password"
-                    value={password}
-                    onChange={clearErrorOnChange(setPassword)}
-                    disabled={loading}
-                    placeholder="Enter your password"
-                    className="pr-11"
-                  />
-
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((prev) => !prev)}
-                    disabled={loading}
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center text-ink-faint hover:text-brand-700 hover:bg-brand-50 transition disabled:opacity-50"
-                  >
-                    {showPassword ? <EyeOff className="w-[18px] h-[18px]" /> : <Eye className="w-[18px] h-[18px]" />}
-                  </button>
+              <div className="mb-6 flex items-center gap-3 lg:hidden">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-700 shadow-md shadow-brand-700/20">
+                  <ShoppingBag className="h-[18px] w-[18px] text-white" />
                 </div>
-              </Field>
 
-              <Button
-                type="submit"
-                loading={loading}
-                icon={loading ? undefined : ArrowRight}
-                className="w-full mt-2"
-                size="lg"
+                <div className="min-w-0">
+                  <h2 className="truncate text-sm font-extrabold text-ink">
+                    CD Shopping Hub
+                  </h2>
+
+                  <p className="mt-0.5 text-[8px] font-bold uppercase tracking-[0.16em] text-ink-faint">
+                    Admin Panel
+                  </p>
+                </div>
+              </div>
+
+              <div className="mb-6">
+                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-700 sm:h-12 sm:w-12">
+                  <LockKeyhole className="h-5 w-5" />
+                </div>
+
+                <p className="mb-1.5 text-[9px] font-extrabold uppercase tracking-[0.2em] text-brand-600">
+                  Welcome back
+                </p>
+
+                <h1 className="text-[24px] font-extrabold leading-tight tracking-tight text-ink sm:text-[28px]">
+                  Sign in to your account
+                </h1>
+
+                <p className="mt-2 max-w-[330px] text-xs leading-5 text-ink-soft sm:text-sm">
+                  Enter your credentials to continue to the admin dashboard.
+                </p>
+              </div>
+
+              {error && (
+                <div className="mb-4 flex w-full items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50 px-3 py-3 text-[10px] font-semibold leading-4 text-rose-600 sm:px-3.5 sm:text-[11px]">
+                  <div className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-rose-500" />
+                  <span className="break-words">{error}</span>
+                </div>
+              )}
+
+              <form
+                onSubmit={handleSubmit}
+                autoComplete="off"
+                spellCheck={false}
+                className="w-full"
               >
-                {loading ? "Signing in..." : "Sign in"}
-              </Button>
-            </form>
+                <Field label="Username">
+                  <Input
+                    autoComplete="off"
+                    value={username}
+                    onChange={clearErrorOnChange(setUsername)}
+                    disabled={loading}
+                    placeholder="Enter your username"
+                    className="h-11 w-full rounded-xl border-[#dce9df] bg-[#fbfdfb] text-sm transition focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10"
+                  />
+                </Field>
 
-            <div className="flex items-center justify-center gap-2 mt-8">
-              <ShieldCheck className="w-3.5 h-3.5 text-brand-600" />
-              <p className="text-[11px] text-ink-faint">
-                Your account is protected with secure authentication
+                <Field label="Password">
+                  <div className="relative w-full">
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      autoComplete="new-password"
+                      value={password}
+                      onChange={clearErrorOnChange(setPassword)}
+                      disabled={loading}
+                      placeholder="Enter your password"
+                      className="h-11 w-full rounded-xl border-[#dce9df] bg-[#fbfdfb] pr-11 text-sm transition focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      disabled={loading}
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
+                      className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-ink-faint transition hover:bg-brand-50 hover:text-brand-700 disabled:opacity-50"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+                </Field>
+
+                <Button
+                  type="submit"
+                  loading={loading}
+                  icon={loading ? undefined : ArrowRight}
+                  className="mt-3 h-11 w-full rounded-xl bg-brand-700 text-xs font-bold shadow-lg shadow-brand-700/15 transition-all duration-300 hover:-translate-y-0.5 hover:bg-brand-800 hover:shadow-brand-700/25 sm:text-sm"
+                  size="lg"
+                >
+                  {loading ? "Signing in..." : "Sign in to dashboard"}
+                </Button>
+              </form>
+
+              <div className="my-5 flex w-full items-center gap-2.5">
+                <div className="h-px flex-1 bg-line" />
+
+                <span className="shrink-0 text-[7px] font-bold uppercase tracking-wider text-ink-faint sm:text-[8px]">
+                  Secure login
+                </span>
+
+                <div className="h-px flex-1 bg-line" />
+              </div>
+
+              <div className="flex w-full items-start gap-2.5 rounded-xl border border-brand-100 bg-brand-50/60 p-3 sm:p-3.5">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-brand-600 shadow-sm">
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                </div>
+
+                <div className="min-w-0">
+                  <p className="text-[10px] font-extrabold text-ink sm:text-[11px]">
+                    Your account is protected
+                  </p>
+
+                  <p className="mt-0.5 text-[8px] leading-4 text-ink-faint sm:text-[9px]">
+                    Secure authentication keeps your account and store data
+                    protected.
+                  </p>
+                </div>
+              </div>
+
+              <p className="mt-5 text-center text-[8px] font-medium text-ink-faint sm:text-[9px]">
+                Authorized staff access only
               </p>
             </div>
           </div>
@@ -203,15 +294,23 @@ export default function Login() {
   );
 }
 
-function Feature({ icon: Icon, title, text }) {
+function FeatureCard({ icon: Icon, title, text }) {
   return (
-    <div className="flex items-center gap-3">
-      <div className="w-9 h-9 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center text-brand-100">
-        <Icon className="w-4 h-4" />
-      </div>
-      <div>
-        <p className="text-xs font-bold text-white">{title}</p>
-        <p className="text-[10px] text-brand-50/50 mt-0.5">{text}</p>
+    <div className="group rounded-xl border border-white/10 bg-white/[0.07] p-2.5 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/[0.11]">
+      <div className="flex items-center gap-2.5">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/10 text-brand-100">
+          <Icon className="h-3.5 w-3.5" />
+        </div>
+
+        <div className="min-w-0">
+          <p className="text-[10px] font-extrabold text-white">
+            {title}
+          </p>
+
+          <p className="mt-0.5 truncate text-[8px] text-white/45">
+            {text}
+          </p>
+        </div>
       </div>
     </div>
   );

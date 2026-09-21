@@ -10,6 +10,11 @@ import {
   Package,
   CheckCircle2,
   XCircle,
+  RefreshCw,
+  Layers3,
+  Boxes,
+  Tag,
+  ChevronDown,
 } from "lucide-react";
 import {
   getCategories,
@@ -20,14 +25,19 @@ import {
 import { getProducts } from "../api/productApis";
 import Button from "../components/ui/Button";
 import Badge from "../components/ui/Badge";
-import { Card, StatCard } from "../components/ui/Card";
+import { Card } from "../components/ui/Card";
 import { Field, Input, Textarea, Select } from "../components/ui/Field";
 import Modal from "../components/ui/Modal";
 import EmptyState from "../components/ui/EmptyState";
 import { useToast } from "../components/ui/Toast";
 
 const slugify = (value) =>
-  value.toString().trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  value
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 
 const normalizeList = (response) => {
   if (Array.isArray(response)) return response;
@@ -36,7 +46,12 @@ const normalizeList = (response) => {
   return [];
 };
 
-const EMPTY_FORM = { name: "", slug: "", description: "", isActive: true };
+const EMPTY_FORM = {
+  name: "",
+  slug: "",
+  description: "",
+  isActive: true,
+};
 
 export default function Categories() {
   const showToast = useToast();
@@ -81,9 +96,6 @@ export default function Categories() {
     }
   };
 
-  // /categories doesn't return a product count, so derive it from the
-  // products list — best-effort: if it fails, categories still load fine
-  // and just show 0 products.
   const loadProductCounts = async () => {
     try {
       const products = normalizeList(await getProducts({ limit: 1000 }));
@@ -91,7 +103,9 @@ export default function Categories() {
 
       products.forEach((product) => {
         const categoryId = product.categoryId || product.category?.id;
+
         if (!categoryId) return;
+
         counts[categoryId] = (counts[categoryId] || 0) + 1;
       });
 
@@ -127,9 +141,19 @@ export default function Categories() {
   }, [categories, search, statusFilter]);
 
   const totalCategories = categories.length;
-  const activeCategories = categories.filter((c) => c.isActive !== false).length;
-  const inactiveCategories = categories.filter((c) => c.isActive === false).length;
-  const totalProducts = Object.values(productCounts).reduce((sum, c) => sum + c, 0);
+
+  const activeCategories = categories.filter(
+    (category) => category.isActive !== false
+  ).length;
+
+  const inactiveCategories = categories.filter(
+    (category) => category.isActive === false
+  ).length;
+
+  const totalProducts = Object.values(productCounts).reduce(
+    (sum, count) => sum + count,
+    0
+  );
 
   const openAddModal = () => {
     setEditingCategory(null);
@@ -143,13 +167,15 @@ export default function Categories() {
 
   const openEditModal = (category) => {
     setEditingCategory(category);
+
     setForm({
       name: category.name || "",
       slug: category.slug || "",
       description: category.description || "",
       isActive: category.isActive !== false,
     });
-    setSlugTouched(true); // existing categories already have a slug — don't auto-overwrite it
+
+    setSlugTouched(true);
     setFormError("");
     setImageFile(null);
     setImagePreview(category.imageUrl || "");
@@ -158,7 +184,9 @@ export default function Categories() {
 
   const handleImageChange = (e) => {
     const file = e.target.files?.[0];
+
     e.target.value = "";
+
     if (!file) return;
 
     setImageFile(file);
@@ -167,11 +195,21 @@ export default function Categories() {
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
-    if (name === "slug") setSlugTouched(true);
+
+    if (name === "slug") {
+      setSlugTouched(true);
+    }
 
     setForm((prev) => {
-      const next = { ...prev, [name]: value };
-      if (name === "name" && !slugTouched) next.slug = slugify(value);
+      const next = {
+        ...prev,
+        [name]: value,
+      };
+
+      if (name === "name" && !slugTouched) {
+        next.slug = slugify(value);
+      }
+
       return next;
     });
   };
@@ -180,29 +218,45 @@ export default function Categories() {
     e.preventDefault();
     setFormError("");
 
-    if (!form.name.trim()) return setFormError("Category name is required.");
-    if (!form.slug.trim()) return setFormError("Slug is required.");
+    if (!form.name.trim()) {
+      return setFormError("Category name is required.");
+    }
+
+    if (!form.slug.trim()) {
+      return setFormError("Slug is required.");
+    }
 
     try {
       setSaving(true);
 
       const formData = new FormData();
+
       formData.append("name", form.name.trim());
       formData.append("slug", form.slug.trim());
       formData.append("description", form.description.trim());
-      if (imageFile) formData.append("image", imageFile);
+
+      if (imageFile) {
+        formData.append("image", imageFile);
+      }
 
       if (editingCategory) {
         formData.append("isActive", String(form.isActive));
+
         await updateCategory(editingCategory.id, formData);
+
         showToast("Category updated successfully");
       } else {
-        if (!form.isActive) formData.append("isActive", "false"); // only sent when it deviates from the backend default
+        if (!form.isActive) {
+          formData.append("isActive", "false");
+        }
+
         await createCategory(formData);
+
         showToast("Category created successfully");
       }
 
       setModalOpen(false);
+
       await loadCategories();
     } catch (err) {
       setFormError(err.message);
@@ -213,14 +267,19 @@ export default function Categories() {
 
   const handleDelete = async () => {
     if (!selectedCategory) return;
+
     setDeleteError("");
 
     try {
       setDeleting(true);
+
       await deleteCategory(selectedCategory.id);
+
       setDeleteModalOpen(false);
       setSelectedCategory(null);
+
       showToast("Category deleted successfully");
+
       await loadCategories();
     } catch (err) {
       setDeleteError(err.message);
@@ -233,257 +292,531 @@ export default function Categories() {
     const nextIsActive = !(category.isActive !== false);
 
     setCategories((prev) =>
-      prev.map((item) => (item.id === category.id ? { ...item, isActive: nextIsActive } : item))
+      prev.map((item) =>
+        item.id === category.id
+          ? {
+              ...item,
+              isActive: nextIsActive,
+            }
+          : item
+      )
     );
 
     try {
-      await updateCategory(category.id, { isActive: nextIsActive });
+      await updateCategory(category.id, {
+        isActive: nextIsActive,
+      });
     } catch (err) {
       setCategories((prev) =>
-        prev.map((item) => (item.id === category.id ? { ...item, isActive: category.isActive } : item))
+        prev.map((item) =>
+          item.id === category.id
+            ? {
+                ...item,
+                isActive: category.isActive,
+              }
+            : item
+        )
       );
+
       showToast(err.message, "error");
     }
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-extrabold text-ink">Categories</h2>
-          <p className="text-sm text-ink-soft mt-1">Manage your store categories and organize products.</p>
-        </div>
+    <div className="w-full min-w-0 space-y-5 overflow-hidden pb-8 sm:space-y-6 lg:space-y-7">
+      <section className="relative overflow-hidden rounded-[24px] bg-gradient-to-br from-brand-700 via-brand-600 to-brand-500 px-5 py-6 text-white shadow-lg shadow-brand-600/10 sm:px-7 sm:py-7 lg:px-8 lg:py-8">
+        <div className="absolute -right-16 -top-20 h-56 w-56 rounded-full bg-white/10" />
+        <div className="absolute -bottom-28 left-1/3 h-64 w-64 rounded-full bg-white/5" />
+        <div className="absolute right-1/4 top-1/2 h-32 w-32 rounded-full bg-white/5 blur-2xl" />
 
-        <Button icon={Plus} onClick={openAddModal}>Add category</Button>
-      </div>
+        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="min-w-0">
+            <div className="mb-2 flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-white/70" />
 
-      {error && (
-        <div className="bg-rose-50 text-rose-500 px-4 py-3 rounded-lg text-sm font-medium">{error}</div>
-      )}
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/70 sm:text-[11px]">
+                Catalog organization
+              </span>
+            </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Total categories" value={totalCategories} icon={Package} tone="brand" />
-        <StatCard label="Active" value={activeCategories} icon={CheckCircle2} tone="brand" />
-        <StatCard label="Inactive" value={inactiveCategories} icon={XCircle} tone="rose" />
-        <StatCard label="Total products" value={totalProducts} icon={Package} tone="sky" />
-      </div>
+            <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl lg:text-[34px]">
+              Categories
+            </h1>
 
-      <Card className="p-3.5">
-        <div className="flex flex-col md:flex-row gap-3">
-          <div className="flex-1 flex items-center h-11 px-3 rounded-lg bg-paper border border-line focus-within:bg-white focus-within:border-brand-500">
-            <Search className="w-4 h-4 text-ink-faint" />
-            <input
-              type="text"
-              placeholder="Search categories..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full ml-2 bg-transparent outline-none text-sm text-ink placeholder:text-ink-faint"
-            />
+            <p className="mt-2 max-w-xl text-xs leading-5 text-white/75 sm:text-sm">
+              Organize your store catalog with categories, descriptions,
+              images and product grouping from one place.
+            </p>
           </div>
 
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="h-11 px-4 rounded-lg border border-line bg-white text-sm font-medium text-ink-soft outline-none focus:border-brand-500"
+          <Button
+            icon={Plus}
+            onClick={openAddModal}
+            className="h-11 w-full justify-center !border-0 !bg-white !text-brand-700 shadow-md hover:!bg-brand-50 sm:w-auto"
           >
-            <option value="all">All status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-          </select>
+            Add category
+          </Button>
+        </div>
+
+        <div className="relative mt-6 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+          <HeaderMetric
+            icon={Layers3}
+            label="Categories"
+            value={totalCategories}
+          />
+
+          <HeaderMetric
+            icon={CheckCircle2}
+            label="Active"
+            value={activeCategories}
+          />
+
+          <HeaderMetric
+            icon={XCircle}
+            label="Inactive"
+            value={inactiveCategories}
+          />
+
+          <HeaderMetric
+            icon={Boxes}
+            label="Products"
+            value={totalProducts}
+          />
+        </div>
+      </section>
+
+      {error && (
+        <div className="flex items-start gap-3 rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-600">
+          <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-rose-500" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      <Card className="overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-line px-4 py-4 sm:px-5 sm:py-5">
+          <div className="flex flex-col gap-1">
+            <h3 className="text-base font-extrabold text-ink sm:text-lg">
+              Category catalog
+            </h3>
+
+            <p className="text-xs text-ink-faint">
+              Search categories or filter them by their current status.
+            </p>
+          </div>
+        </div>
+
+        <div className="p-4 sm:p-5">
+          <div className="flex flex-col gap-3 lg:flex-row">
+            <div className="flex h-11 min-w-0 flex-1 items-center rounded-xl border border-line bg-paper px-3 transition focus-within:border-brand-500 focus-within:bg-white focus-within:shadow-sm">
+              <Search className="h-4 w-4 shrink-0 text-ink-faint" />
+
+              <input
+                type="text"
+                placeholder="Search categories..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="ml-2 min-w-0 w-full bg-transparent text-sm text-ink outline-none placeholder:text-ink-faint"
+              />
+            </div>
+
+            <div className="relative w-full lg:w-[220px]">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="h-11 w-full appearance-none rounded-xl border border-line bg-white px-3 pr-9 text-sm font-semibold text-ink-soft outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+              >
+                <option value="all">All status</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+
+              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-faint" />
+            </div>
+          </div>
         </div>
       </Card>
 
       {loading ? (
-        <Card className="p-14 text-center text-sm text-ink-soft">Loading categories...</Card>
+        <Card className="overflow-hidden rounded-[22px] border border-slate-200 p-8 sm:p-14">
+          <div className="flex flex-col items-center justify-center text-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-50 text-brand-600">
+              <RefreshCw className="h-6 w-6 animate-spin" />
+            </div>
+
+            <p className="mt-4 text-sm font-bold text-ink">
+              Loading categories...
+            </p>
+
+            <p className="mt-1 text-xs text-ink-faint">
+              Fetching your latest category data
+            </p>
+          </div>
+        </Card>
       ) : filteredCategories.length === 0 ? (
-        <Card>
-          <EmptyState icon={Package} title="No categories found" description="Try changing your search or filter." />
+        <Card className="overflow-hidden rounded-[22px] border border-slate-200">
+          <EmptyState
+            icon={Layers3}
+            title="No categories found"
+            description="Try changing your search or status filter."
+            action={
+              <Button icon={Plus} onClick={openAddModal}>
+                Add category
+              </Button>
+            }
+          />
         </Card>
       ) : (
-        <>
-          {/* Desktop table */}
-          <Card className="hidden md:block overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-line bg-paper/70">
-                    {["Category", "Description", "Products", "Status", "Actions"].map((h, i) => (
-                      <th
-                        key={h}
-                        className={`px-5 py-4 text-[11px] font-bold uppercase tracking-wide text-ink-faint ${
-                          i === 2 ? "text-center" : i === 3 ? "text-center" : i === 4 ? "text-right" : "text-left"
-                        }`}
+        <div className="flex flex-col gap-5">
+          {filteredCategories.map((category) => {
+            const isActive = category.isActive !== false;
+            const productCount = productCounts[category.id] || 0;
+
+            return (
+              <Card
+                key={category.id}
+                className="group overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-lg"
+              >
+                <div className="p-4 sm:p-5 lg:p-6">
+                  <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                    <div className="flex min-w-0 items-start gap-3 sm:gap-4">
+                      <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl border border-brand-100 bg-brand-50 sm:h-[76px] sm:w-[76px]">
+                        {category.imageUrl ? (
+                          <img
+                            src={category.imageUrl}
+                            alt={category.name}
+                            className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center">
+                            <ImageIcon className="h-6 w-6 text-ink-faint" />
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="max-w-full truncate text-base font-extrabold text-ink sm:text-lg">
+                            {category.name}
+                          </h3>
+
+                          <Badge tone={isActive ? "brand" : "neutral"}>
+                            {isActive ? "Active" : "Inactive"}
+                          </Badge>
+                        </div>
+
+                        <p className="mt-1 truncate text-xs font-medium text-ink-soft sm:text-[13px]">
+                          {category.slug || "No slug available"}
+                        </p>
+
+                        <p className="mt-2 line-clamp-2 max-w-2xl text-xs leading-5 text-ink-faint sm:text-[13px]">
+                          {category.description || "No description available"}
+                        </p>
+
+                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                          <span className="rounded-full bg-brand-50 px-2.5 py-1 text-[10px] font-bold text-brand-700">
+                            {productCount}{" "}
+                            {productCount === 1 ? "product" : "products"}
+                          </span>
+
+                          <span className="rounded-full bg-paper px-2.5 py-1 text-[10px] font-semibold text-ink-faint">
+                            Category catalog
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2 xl:flex xl:shrink-0">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        icon={Eye}
+                        onClick={() => {
+                          setSelectedCategory(category);
+                          setViewModalOpen(true);
+                        }}
+                        className="w-full justify-center"
                       >
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
+                        <span>View</span>
+                      </Button>
 
-                <tbody>
-                  {filteredCategories.map((category) => {
-                    const isActive = category.isActive !== false;
-                    const productCount = productCounts[category.id] || 0;
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        icon={Pencil}
+                        onClick={() => openEditModal(category)}
+                        className="w-full justify-center"
+                      >
+                        <span>Edit</span>
+                      </Button>
 
-                    return (
-                      <tr key={category.id} className="border-b border-line/70 last:border-0 hover:bg-paper/50 transition">
-                        <td className="px-5 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 rounded-lg bg-paper border border-line flex items-center justify-center shrink-0 overflow-hidden">
-                              {category.imageUrl ? (
-                                <img src={category.imageUrl} alt={category.name} className="w-full h-full object-cover" />
-                              ) : (
-                                <ImageIcon className="w-5 h-5 text-ink-faint" />
-                              )}
+                      <Button
+                        variant="dangerGhost"
+                        size="sm"
+                        icon={Trash2}
+                        onClick={() => {
+                          setSelectedCategory(category);
+                          setDeleteError("");
+                          setDeleteModalOpen(true);
+                        }}
+                        className="w-full justify-center"
+                      >
+                        <span>Delete</span>
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 overflow-hidden rounded-2xl border border-line bg-white">
+                    <div className="hidden md:block">
+                      <div className="grid grid-cols-4 border-b border-line bg-brand-50/60">
+                        <div className="px-4 py-3 text-[9px] font-bold uppercase tracking-wider text-ink-faint">
+                          Category
+                        </div>
+
+                        <div className="px-4 py-3 text-[9px] font-bold uppercase tracking-wider text-ink-faint">
+                          Description
+                        </div>
+
+                        <div className="px-4 py-3 text-center text-[9px] font-bold uppercase tracking-wider text-ink-faint">
+                          Products
+                        </div>
+
+                        <div className="px-4 py-3 text-right text-[9px] font-bold uppercase tracking-wider text-ink-faint">
+                          Status
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-4 items-center">
+                        <div className="px-4 py-4">
+                          <div className="flex items-center gap-2">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
+                              <Tag className="h-3.5 w-3.5" />
                             </div>
-                            <div>
-                              <p className="text-sm font-bold text-ink">{category.name}</p>
-                              <p className="text-xs text-ink-faint mt-0.5">{category.slug}</p>
+
+                            <div className="min-w-0">
+                              <p className="truncate text-xs font-extrabold text-ink">
+                                {category.name}
+                              </p>
+
+                              <p className="truncate text-[9px] text-ink-faint">
+                                {category.slug}
+                              </p>
                             </div>
                           </div>
-                        </td>
+                        </div>
 
-                        <td className="px-5 py-4">
-                          <p className="text-sm text-ink-soft max-w-[280px] truncate">
+                        <div className="px-4 py-4">
+                          <p className="line-clamp-2 text-xs leading-5 text-ink-soft">
                             {category.description || "No description"}
                           </p>
-                        </td>
+                        </div>
 
-                        <td className="px-5 py-4 text-center">
+                        <div className="px-4 py-4 text-center">
                           <Badge tone="brand">{productCount}</Badge>
-                        </td>
+                        </div>
 
-                        <td className="px-5 py-4 text-center">
-                          <button onClick={() => toggleStatus(category)}>
-                            <Badge tone={isActive ? "brand" : "rose"} dot>
+                        <div className="px-4 py-4 text-right">
+                          <button
+                            onClick={() => toggleStatus(category)}
+                            className="inline-flex"
+                          >
+                            <Badge
+                              tone={isActive ? "brand" : "rose"}
+                              dot
+                            >
                               {isActive ? "Active" : "Inactive"}
                             </Badge>
                           </button>
-                        </td>
-
-                        <td className="px-5 py-4">
-                          <div className="flex justify-end items-center gap-1">
-                            <IconAction icon={Eye} label="View" onClick={() => { setSelectedCategory(category); setViewModalOpen(true); }} />
-                            <IconAction icon={Pencil} label="Edit" onClick={() => openEditModal(category)} />
-                            <IconAction icon={Trash2} label="Delete" tone="danger" onClick={() => { setSelectedCategory(category); setDeleteError(""); setDeleteModalOpen(true); }} />
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </Card>
-
-          {/* Mobile cards */}
-          <div className="md:hidden space-y-3">
-            {filteredCategories.map((category) => {
-              const isActive = category.isActive !== false;
-              const productCount = productCounts[category.id] || 0;
-
-              return (
-                <Card key={category.id} className="p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="w-14 h-14 rounded-lg bg-paper border border-line shrink-0 flex items-center justify-center overflow-hidden">
-                      {category.imageUrl ? (
-                        <img src={category.imageUrl} alt={category.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <ImageIcon className="w-5 h-5 text-ink-faint" />
-                      )}
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <h3 className="text-sm font-bold text-ink">{category.name}</h3>
-                          <p className="text-xs text-ink-faint mt-1">{category.description}</p>
+                    <div className="divide-y divide-line/70 md:hidden">
+                      <div className="grid grid-cols-2 gap-3 p-3.5">
+                        <div className="rounded-xl bg-brand-50/60 p-3">
+                          <p className="text-[8px] font-bold uppercase tracking-wide text-ink-faint">
+                            Products
+                          </p>
+
+                          <p className="mt-1 text-sm font-extrabold text-ink">
+                            {productCount}
+                          </p>
                         </div>
 
-                        <button onClick={() => toggleStatus(category)}>
-                          <Badge tone={isActive ? "brand" : "rose"} dot>{isActive ? "active" : "inactive"}</Badge>
-                        </button>
-                      </div>
+                        <div className="rounded-xl bg-brand-50/60 p-3">
+                          <p className="text-[8px] font-bold uppercase tracking-wide text-ink-faint">
+                            Status
+                          </p>
 
-                      <div className="flex items-center justify-between mt-4">
-                        <span className="text-xs text-ink-soft">
-                          <span className="font-bold text-ink">{productCount}</span> products
-                        </span>
-
-                        <div className="flex items-center gap-1">
-                          <IconAction icon={Eye} label="View" onClick={() => { setSelectedCategory(category); setViewModalOpen(true); }} />
-                          <IconAction icon={Pencil} label="Edit" onClick={() => openEditModal(category)} />
-                          <IconAction icon={Trash2} label="Delete" tone="danger" onClick={() => { setSelectedCategory(category); setDeleteError(""); setDeleteModalOpen(true); }} />
+                          <button
+                            onClick={() => toggleStatus(category)}
+                            className="mt-1"
+                          >
+                            <Badge
+                              tone={isActive ? "brand" : "rose"}
+                              dot
+                            >
+                              {isActive ? "Active" : "Inactive"}
+                            </Badge>
+                          </button>
                         </div>
                       </div>
                     </div>
                   </div>
-                </Card>
-              );
-            })}
-          </div>
-        </>
+
+                  <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-2 text-[10px] font-semibold text-ink-faint">
+                      <span className="h-1.5 w-1.5 rounded-full bg-brand-500" />
+                      <span>Category management</span>
+                    </div>
+
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      icon={Eye}
+                      onClick={() => {
+                        setSelectedCategory(category);
+                        setViewModalOpen(true);
+                      }}
+                      className="w-full justify-center sm:w-auto"
+                    >
+                      View category details
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            );
+          })}
+        </div>
       )}
 
-      {/* Add / Edit modal */}
       {modalOpen && (
         <Modal
           title={editingCategory ? "Edit category" : "Add category"}
-          description={editingCategory ? "Update category details." : "Create a new store category."}
+          description={
+            editingCategory
+              ? "Update category details."
+              : "Create a new store category."
+          }
           onClose={() => setModalOpen(false)}
           footer={
             <>
-              <Button variant="secondary" onClick={() => setModalOpen(false)} disabled={saving}>Cancel</Button>
-              <Button type="submit" form="category-form" loading={saving}>
-                {saving ? "Saving..." : editingCategory ? "Update category" : "Create category"}
+              <Button
+                variant="secondary"
+                onClick={() => setModalOpen(false)}
+                disabled={saving}
+              >
+                Cancel
+              </Button>
+
+              <Button
+                type="submit"
+                form="category-form"
+                loading={saving}
+              >
+                {saving
+                  ? "Saving..."
+                  : editingCategory
+                  ? "Update category"
+                  : "Create category"}
               </Button>
             </>
           }
         >
           <form id="category-form" onSubmit={handleSubmit}>
             {formError && (
-              <div className="bg-rose-50 text-rose-500 px-3 py-2.5 rounded-lg text-sm font-medium mb-4">{formError}</div>
+              <div className="mb-4 rounded-xl border border-rose-100 bg-rose-50 px-3 py-2.5 text-sm font-medium text-rose-500">
+                {formError}
+              </div>
             )}
 
             <Field label="Category name" required>
-              <Input name="name" value={form.name} onChange={handleFormChange} placeholder="Enter category name" />
+              <Input
+                name="name"
+                value={form.name}
+                onChange={handleFormChange}
+                placeholder="Enter category name"
+              />
             </Field>
 
-            <Field label="Slug" required hint="Auto-filled from the name — edit it directly if you need something different.">
-              <Input name="slug" value={form.slug} onChange={handleFormChange} placeholder="category-slug" />
+            <Field
+              label="Slug"
+              required
+              hint="Auto-filled from the name — edit it directly if you need something different."
+            >
+              <Input
+                name="slug"
+                value={form.slug}
+                onChange={handleFormChange}
+                placeholder="category-slug"
+              />
             </Field>
 
             <Field label="Description">
-              <Textarea name="description" value={form.description} onChange={handleFormChange} placeholder="Enter category description" />
+              <Textarea
+                name="description"
+                value={form.description}
+                onChange={handleFormChange}
+                placeholder="Enter category description"
+              />
             </Field>
 
-            <Field label="Category photo" hint="Supports JPG, PNG or WEBP.">
-              <div className="flex items-center gap-3">
-                {imagePreview ? (
-                  <div className="relative w-16 h-16 rounded-lg overflow-hidden border border-line bg-paper shrink-0">
-                    <img src={imagePreview} alt="Category" className="w-full h-full object-cover" />
+            <Field
+              label="Category photo"
+              hint="Supports JPG, PNG or WEBP."
+            >
+              <div className="rounded-2xl border border-line bg-paper/50 p-3 sm:p-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  {imagePreview ? (
+                    <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-brand-100 bg-brand-50">
+                      <img
+                        src={imagePreview}
+                        alt="Category"
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        fileInputRef.current?.click()
+                      }
+                      className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl border-2 border-dashed border-line bg-white text-ink-soft transition hover:border-brand-500 hover:bg-brand-50 hover:text-brand-700"
+                    >
+                      <ImagePlus className="h-6 w-6" />
+                    </button>
+                  )}
+
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-ink">
+                      Category image
+                    </p>
+
+                    <p className="mt-1 text-[10px] leading-4 text-ink-faint">
+                      Add a clean category image to make the catalog easier
+                      to recognize.
+                    </p>
+
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      onClick={() =>
+                        fileInputRef.current?.click()
+                      }
+                      className="mt-2"
+                    >
+                      {imagePreview ? "Change photo" : "Add photo"}
+                    </Button>
                   </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="w-16 h-16 rounded-lg border-2 border-dashed border-line text-ink-soft flex items-center justify-center hover:border-brand-500 hover:text-brand-700 shrink-0"
-                  >
-                    <ImagePlus className="w-5 h-5" />
-                  </button>
-                )}
 
-                <Button type="button" variant="secondary" size="sm" onClick={() => fileInputRef.current?.click()}>
-                  {imagePreview ? "Change photo" : "Add photo"}
-                </Button>
-
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  onChange={handleImageChange}
-                  className="hidden"
-                />
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={handleImageChange}
+                    className="hidden"
+                  />
+                </div>
               </div>
             </Field>
 
@@ -491,7 +824,12 @@ export default function Categories() {
               <Select
                 name="isActive"
                 value={form.isActive ? "active" : "inactive"}
-                onChange={(e) => setForm((prev) => ({ ...prev, isActive: e.target.value === "active" }))}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    isActive: e.target.value === "active",
+                  }))
+                }
               >
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
@@ -501,33 +839,86 @@ export default function Categories() {
         </Modal>
       )}
 
-      {/* View modal */}
       {viewModalOpen && selectedCategory && (
-        <Modal title={selectedCategory.name} description={selectedCategory.slug} onClose={() => setViewModalOpen(false)} width="sm">
-          <div className="w-full h-36 rounded-lg bg-paper border border-line overflow-hidden flex items-center justify-center mb-4">
-            {selectedCategory.imageUrl ? (
-              <img src={selectedCategory.imageUrl} alt={selectedCategory.name} className="w-full h-full object-cover" />
-            ) : (
-              <ImageIcon className="w-8 h-8 text-ink-faint" />
-            )}
+        <Modal
+          title={selectedCategory.name}
+          description={selectedCategory.slug}
+          onClose={() => setViewModalOpen(false)}
+          width="sm"
+        >
+          <div className="overflow-hidden rounded-2xl border border-brand-100 bg-brand-50">
+            <div className="flex h-44 items-center justify-center sm:h-52">
+              {selectedCategory.imageUrl ? (
+                <img
+                  src={selectedCategory.imageUrl}
+                  alt={selectedCategory.name}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="flex flex-col items-center gap-2 text-ink-faint">
+                  <ImageIcon className="h-9 w-9" />
+                  <span className="text-xs font-medium">
+                    No category image
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="flex items-center justify-between gap-3 mb-4">
-            <Badge tone={selectedCategory.isActive !== false ? "brand" : "rose"}>
-              {selectedCategory.isActive !== false ? "active" : "inactive"}
+          <div className="mt-4 flex items-center justify-between gap-3">
+            <Badge
+              tone={
+                selectedCategory.isActive !== false
+                  ? "brand"
+                  : "rose"
+              }
+              dot
+            >
+              {selectedCategory.isActive !== false
+                ? "Active"
+                : "Inactive"}
             </Badge>
+
+            <span className="rounded-full bg-brand-50 px-3 py-1 text-[10px] font-bold text-brand-700">
+              {productCounts[selectedCategory.id] || 0} products
+            </span>
           </div>
 
-          <p className="text-sm text-ink-soft">{selectedCategory.description || "No description available."}</p>
+          <div className="mt-4 rounded-2xl border border-line bg-paper p-4">
+            <p className="text-[9px] font-bold uppercase tracking-wider text-ink-faint">
+              Description
+            </p>
 
-          <div className="mt-5 p-4 rounded-lg bg-paper flex items-center justify-between">
-            <span className="text-sm text-ink-soft">Total products</span>
-            <span className="text-lg font-extrabold text-ink">{productCounts[selectedCategory.id] || 0}</span>
+            <p className="mt-2 text-sm leading-6 text-ink-soft">
+              {selectedCategory.description ||
+                "No description available."}
+            </p>
+          </div>
+
+          <div className="mt-3 grid grid-cols-2 gap-3">
+            <div className="rounded-xl bg-brand-50/70 p-3">
+              <p className="text-[8px] font-bold uppercase tracking-wide text-ink-faint">
+                Category
+              </p>
+
+              <p className="mt-1 truncate text-xs font-extrabold text-ink">
+                {selectedCategory.name}
+              </p>
+            </div>
+
+            <div className="rounded-xl bg-brand-50/70 p-3">
+              <p className="text-[8px] font-bold uppercase tracking-wide text-ink-faint">
+                Products
+              </p>
+
+              <p className="mt-1 text-xs font-extrabold text-ink">
+                {productCounts[selectedCategory.id] || 0}
+              </p>
+            </div>
           </div>
         </Modal>
       )}
 
-      {/* Delete modal */}
       {deleteModalOpen && selectedCategory && (
         <Modal
           title="Delete category?"
@@ -535,17 +926,50 @@ export default function Categories() {
           width="sm"
           footer={
             <>
-              <Button variant="secondary" onClick={() => setDeleteModalOpen(false)} disabled={deleting}>Cancel</Button>
-              <Button variant="danger" loading={deleting} onClick={handleDelete}>Delete</Button>
+              <Button
+                variant="secondary"
+                onClick={() => setDeleteModalOpen(false)}
+                disabled={deleting}
+              >
+                Cancel
+              </Button>
+
+              <Button
+                variant="danger"
+                loading={deleting}
+                onClick={handleDelete}
+              >
+                Delete
+              </Button>
             </>
           }
         >
-          <p className="text-sm text-ink-soft">
-            Are you sure you want to delete <strong className="text-ink">{selectedCategory.name}</strong>?
-          </p>
+          <div className="rounded-2xl border border-rose-100 bg-rose-50 p-4">
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-rose-500">
+                <Trash2 className="h-4 w-4" />
+              </div>
+
+              <div>
+                <p className="text-sm font-bold text-ink">
+                  Delete this category?
+                </p>
+
+                <p className="mt-1 text-xs leading-5 text-ink-soft">
+                  Are you sure you want to delete{" "}
+                  <strong className="font-extrabold text-ink">
+                    {selectedCategory.name}
+                  </strong>
+                  ?
+                </p>
+              </div>
+            </div>
+          </div>
 
           {deleteError && (
-            <div className="bg-rose-50 text-rose-500 px-3 py-2.5 rounded-lg text-sm font-medium mt-4">{deleteError}</div>
+            <div className="mt-4 rounded-xl border border-rose-100 bg-rose-50 px-3 py-2.5 text-sm font-medium text-rose-500">
+              {deleteError}
+            </div>
           )}
         </Modal>
       )}
@@ -553,16 +977,20 @@ export default function Categories() {
   );
 }
 
-function IconAction({ icon: Icon, label, onClick, tone = "default" }) {
+function HeaderMetric({ icon: Icon, label, value }) {
   return (
-    <button
-      onClick={onClick}
-      title={label}
-      className={`w-9 h-9 rounded-lg flex items-center justify-center text-ink-faint transition ${
-        tone === "danger" ? "hover:bg-rose-50 hover:text-rose-500" : "hover:bg-brand-50 hover:text-brand-700"
-      }`}
-    >
-      <Icon className="w-4 h-4" />
-    </button>
+    <div className="rounded-2xl border border-white/10 bg-brand-700/60 p-3 transition duration-300 hover:bg-brand-700/80 sm:p-3.5">
+      <div className="flex items-center gap-2">
+        <Icon className="h-3.5 w-3.5 text-white/70" />
+
+        <p className="text-[9px] font-semibold uppercase tracking-wide text-white/65">
+          {label}
+        </p>
+      </div>
+
+      <p className="mt-1 text-base font-extrabold sm:text-lg">
+        {value}
+      </p>
+    </div>
   );
 }

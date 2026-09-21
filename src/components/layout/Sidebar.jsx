@@ -1,3 +1,4 @@
+
 import { NavLink } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -8,14 +9,11 @@ import {
   BookMarked,
   Settings,
   LogOut,
-  ChevronLeft,
-  ChevronRight,
   X,
   Store,
+  Sparkles,
 } from "lucide-react";
 
-// Kept in sync with the routes registered in App.jsx — a nav item that
-// points at a route which doesn't exist is worse than no nav item.
 const NAV_ITEMS = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
   { label: "Orders", icon: ShoppingCart, path: "/orders" },
@@ -26,8 +24,6 @@ const NAV_ITEMS = [
 ];
 
 export default function Sidebar({
-  collapsed,
-  setCollapsed,
   mobileOpen,
   setMobileOpen,
   storeName,
@@ -37,133 +33,221 @@ export default function Sidebar({
 }) {
   const closeOnMobile = () => setMobileOpen(false);
 
+  const initials =
+    staffName
+      ?.split(" ")
+      .map((word) => word?.[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase() || "AD";
+
   return (
     <>
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-ink/30 backdrop-blur-[2px] lg:hidden"
+          className="fixed inset-0 z-40 bg-slate-950/35 backdrop-blur-sm lg:hidden"
           onClick={closeOnMobile}
         />
       )}
 
       <aside
         className={`
-          fixed left-0 top-0 z-50 h-screen bg-card border-r border-line
-          flex flex-col transition-all duration-200 ease-out
-          ${collapsed ? "w-[78px]" : "w-[248px]"}
+          fixed left-0 top-0 z-50 flex h-[100dvh] w-[250px]
+          flex-col overflow-hidden border-r border-[#dce9df]
+          bg-white shadow-[8px_0_30px_rgba(18,77,42,0.05)]
+          transition-transform duration-300 ease-in-out
           ${mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
         `}
       >
-        {/* Brand */}
-        <div className={`h-[70px] flex items-center border-b border-line ${collapsed ? "justify-center px-3" : "px-5"}`}>
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-9 h-9 shrink-0 rounded-lg bg-brand-600 flex items-center justify-center">
-              <Store className="w-4.5 h-4.5 text-white" strokeWidth={2.2} />
+        <div className="relative flex h-[72px] shrink-0 items-center border-b border-[#e7efe9] px-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-[13px] bg-gradient-to-br from-brand-700 to-brand-500 shadow-md shadow-brand-700/15">
+              <div className="absolute -right-2 -top-2 h-6 w-6 rounded-full bg-white/10" />
+
+              <Store
+                className="relative h-[19px] w-[19px] text-white"
+                strokeWidth={2.2}
+              />
             </div>
 
-            {!collapsed && (
-              <div className="min-w-0">
-                <h1 className="text-sm font-extrabold text-ink truncate">
-                  {storeName}
-                </h1>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-brand-600">
+            <div className="min-w-0">
+              <h1 className="truncate text-[13px] font-extrabold tracking-tight text-ink">
+                {storeName}
+              </h1>
+
+              <div className="mt-0.5 flex items-center gap-1">
+                <Sparkles className="h-2.5 w-2.5 text-brand-600" />
+
+                <p className="text-[8px] font-extrabold uppercase tracking-[0.16em] text-brand-600">
                   Seller Hub
                 </p>
               </div>
-            )}
+            </div>
           </div>
 
           <button
             onClick={closeOnMobile}
             aria-label="Close menu"
-            className="ml-auto lg:hidden w-8 h-8 rounded-lg hover:bg-paper flex items-center justify-center text-ink-soft"
+            className="ml-auto flex h-8 w-8 items-center justify-center rounded-xl text-ink-faint transition hover:bg-brand-50 hover:text-brand-700 lg:hidden"
           >
-            <X className="w-4.5 h-4.5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
-        {/* Nav */}
-        <nav className="flex-1 overflow-y-auto px-3 py-5 space-y-1">
-          {NAV_ITEMS.map((item) => {
-            const Icon = item.icon;
+        <div className="mx-3 mt-4 rounded-[14px] border border-brand-100 bg-gradient-to-r from-brand-50 to-[#f5faf6] px-3 py-2.5">
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white text-brand-600 shadow-sm">
+              <Store className="h-3.5 w-3.5" />
+            </div>
 
-            return (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                onClick={closeOnMobile}
-                title={collapsed ? item.label : undefined}
-                className={({ isActive }) => `
-                  group relative flex items-center rounded-lg transition-colors
-                  ${collapsed ? "justify-center px-2 py-3" : "gap-3 px-3 py-2.5"}
-                  ${
-                    isActive
-                      ? "bg-brand-600 text-white"
-                      : "text-ink-soft hover:bg-brand-50 hover:text-brand-700"
-                  }
-                `}
-              >
-                <Icon className="w-[18px] h-[18px] shrink-0" strokeWidth={2} />
-                {!collapsed && (
-                  <span className="text-[13px] font-semibold">{item.label}</span>
-                )}
-              </NavLink>
-            );
-          })}
+            <div className="min-w-0">
+              <p className="text-[8px] font-bold uppercase tracking-wider text-brand-600">
+                Store status
+              </p>
+
+              <div className="mt-0.5 flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.10)]" />
+
+                <span className="text-[9px] font-bold text-ink-soft">
+                  Store is active
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <nav className="flex-1 overflow-y-auto px-3 py-5">
+          <p className="mb-2 px-2 text-[8px] font-extrabold uppercase tracking-[0.18em] text-ink-faint">
+            Main menu
+          </p>
+
+          <div className="space-y-1">
+            {NAV_ITEMS.map((item) => {
+              const Icon = item.icon;
+
+              return (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  onClick={closeOnMobile}
+                  className={({ isActive }) => `
+                    group relative flex min-h-[43px] items-center gap-3
+                    overflow-hidden rounded-xl px-3
+                    transition-all duration-200
+                    ${
+                      isActive
+                        ? "bg-brand-700 text-white shadow-md shadow-brand-700/15"
+                        : "text-ink-soft hover:bg-brand-50 hover:text-brand-700"
+                    }
+                  `}
+                >
+                  {({ isActive }) => (
+                    <>
+                      {isActive && (
+                        <span className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-brand-300" />
+                      )}
+
+                      <div
+                        className={`
+                          flex h-8 w-8 shrink-0 items-center justify-center rounded-lg
+                          transition-all duration-200
+                          ${
+                            isActive
+                              ? "bg-white/12 text-white"
+                              : "bg-transparent text-ink-faint group-hover:bg-white group-hover:text-brand-700"
+                          }
+                        `}
+                      >
+                        <Icon
+                          className="h-[17px] w-[17px]"
+                          strokeWidth={isActive ? 2.3 : 2}
+                        />
+                      </div>
+
+                      <span
+                        className={`
+                          flex-1 text-[12px] font-bold
+                          ${isActive ? "text-white" : "text-inherit"}
+                        `}
+                      >
+                        {item.label}
+                      </span>
+
+                      {isActive && (
+                        <span className="h-1.5 w-1.5 rounded-full bg-brand-200" />
+                      )}
+                    </>
+                  )}
+                </NavLink>
+              );
+            })}
+          </div>
         </nav>
 
-        {/* Settings + account */}
-        <div className="border-t border-line px-3 py-3 space-y-1">
+        <div className="shrink-0 border-t border-[#e7efe9] bg-[#fbfdfb] px-3 py-3">
           <NavLink
             to="/settings"
             onClick={closeOnMobile}
-            title={collapsed ? "Settings" : undefined}
             className={({ isActive }) => `
-              flex items-center rounded-lg transition-colors
-              ${collapsed ? "justify-center px-2 py-2.5" : "gap-3 px-3 py-2.5"}
+              group flex min-h-[42px] items-center gap-3 rounded-xl
+              px-3 transition-all duration-200
               ${
                 isActive
-                  ? "bg-brand-600 text-white"
+                  ? "bg-brand-700 text-white shadow-sm"
                   : "text-ink-soft hover:bg-brand-50 hover:text-brand-700"
               }
             `}
           >
-            <Settings className="w-[18px] h-[18px] shrink-0" strokeWidth={2} />
-            {!collapsed && <span className="text-[13px] font-semibold">Settings</span>}
-          </NavLink>
-
-          <div className={`flex items-center gap-2.5 rounded-lg px-2 py-2 ${collapsed ? "justify-center" : ""}`}>
-            <div className="w-8 h-8 shrink-0 rounded-full bg-brand-600 text-white text-[11px] font-extrabold flex items-center justify-center">
-              {staffName.slice(0, 2).toUpperCase()}
-            </div>
-
-            {!collapsed && (
+            {({ isActive }) => (
               <>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-bold text-ink truncate">{staffName}</p>
-                  <p className="text-[10px] text-ink-faint truncate">{staffEmail}</p>
+                <div
+                  className={`
+                    flex h-8 w-8 shrink-0 items-center justify-center rounded-lg
+                    ${
+                      isActive
+                        ? "bg-white/10 text-white"
+                        : "text-ink-faint group-hover:text-brand-700"
+                    }
+                  `}
+                >
+                  <Settings className="h-[17px] w-[17px]" />
                 </div>
 
-                <button
-                  onClick={onLogout}
-                  title="Log out"
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-ink-faint hover:bg-rose-50 hover:text-rose-500 transition"
-                >
-                  <LogOut className="w-4 h-4" />
-                </button>
+                <span className="text-[12px] font-bold">Settings</span>
               </>
             )}
+          </NavLink>
+
+          <div className="mt-2 flex items-center gap-2.5 rounded-xl border border-[#e5eee8] bg-white p-2">
+            <div className="relative shrink-0">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-700 to-brand-500 text-[10px] font-extrabold text-white shadow-sm">
+                {initials}
+              </div>
+
+              <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-500" />
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[11px] font-extrabold text-ink">
+                {staffName}
+              </p>
+
+              <p className="mt-0.5 truncate text-[8px] font-medium text-ink-faint">
+                {staffEmail}
+              </p>
+            </div>
+
+            <button
+              onClick={onLogout}
+              title="Log out"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-ink-faint transition-all hover:bg-rose-50 hover:text-rose-500"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+            </button>
           </div>
         </div>
-
-        {/* Collapse toggle — desktop only */}
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="hidden lg:flex absolute -right-3 top-[78px] w-6 h-6 rounded-full bg-card border border-line items-center justify-center text-ink-soft hover:text-brand-700 hover:border-brand-500 transition"
-        >
-          {collapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
-        </button>
       </aside>
     </>
   );
 }
+
