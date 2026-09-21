@@ -3,9 +3,7 @@ import { X, ImagePlus, Upload } from "lucide-react";
 import {
   createProduct,
   updateProduct,
-  updateProductVariant,
   receiveStock,
-  uploadProductImages,
   bulkImportProducts,
 } from "../../api/productApis";
 import Modal from "../ui/Modal";
@@ -42,7 +40,6 @@ export default function ProductModal({ categories, brands, product, onClose, onS
     isActive: true,
   });
 
-  const [variants, setVariants] = useState([]);
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -72,19 +69,6 @@ export default function ProductModal({ categories, brands, product, onClose, onS
         isActive: product.isActive !== undefined ? product.isActive : true,
       });
 
-      setVariants(
-        (product.variants || []).map((variant) => ({
-          id: variant.id,
-          sku: variant.sku || "",
-          weight: variant.weight != null ? String(variant.weight) : "",
-          unit: variant.unit || "G",
-          mrp: variant.mrp != null ? String(variant.mrp) : "",
-          sellingPrice: variant.sellingPrice != null ? String(variant.sellingPrice) : "",
-          isActive: variant.isActive !== undefined ? variant.isActive : true,
-          isAvailable: variant.isAvailable !== undefined ? variant.isAvailable : true,
-        }))
-      );
-
       setSlugTouched(true);
 
       const existingImages =
@@ -111,7 +95,6 @@ export default function ProductModal({ categories, brands, product, onClose, onS
         isActive: true,
       });
 
-      setVariants([]);
       setImages([]);
       setMode("single");
       setSlugTouched(false);
@@ -136,11 +119,6 @@ export default function ProductModal({ categories, brands, product, onClose, onS
     setSlugTouched(true);
     update("slug", value);
   };
-
-  const updateVariant = (variantId, key, value) =>
-    setVariants((prev) =>
-      prev.map((v) => (v.id === variantId ? { ...v, [key]: value } : v))
-    );
 
   const handleImagesChange = (e) => {
     const files = Array.from(e.target.files || []);
@@ -174,26 +152,14 @@ export default function ProductModal({ categories, brands, product, onClose, onS
       return next;
     });
 
-  const validateEditVariants = () => {
-    for (const variant of variants) {
-      if (!variant.sku?.trim()) return `SKU is required for variant ${variant.id}.`;
-      if (variant.weight === "" || Number(variant.weight) < 0)
-        return `Weight is required for SKU ${variant.sku}.`;
-      if (variant.mrp === "" || Number(variant.mrp) < 0)
-        return `MRP is required for SKU ${variant.sku}.`;
-      if (variant.sellingPrice === "" || Number(variant.sellingPrice) < 0)
-        return `Selling price is required for SKU ${variant.sku}.`;
-      if (!variant.unit) return `Unit is required for SKU ${variant.sku}.`;
-    }
-    return "";
-  };
-
   // Existing (already-saved) photos are left alone; only not-yet-uploaded
-  // ones get sent, via POST /uploads/product-images (productId + files[]).
-  const uploadPendingImages = async (productId) => {
-    const pending = images.filter((image) => !image.isExisting && image.file);
-    if (!pending.length) return;
-    await uploadProductImages(productId, pending.map((image) => image.file));
+  // ones get appended, directly on the same product FormData under the
+  // "images" field — the /products endpoint accepts them inline, there is
+  // no separate upload step.
+  const appendNewImages = (formData) => {
+    images
+      .filter((image) => !image.isExisting && image.file)
+      .forEach((image) => formData.append("images", image.file));
   };
 
   const submit = async (e) => {
@@ -207,6 +173,10 @@ export default function ProductModal({ categories, brands, product, onClose, onS
       setLoading(true);
 
       if (isEdit) {
+        // Product-fields-only. This never touches variants — editing a
+        // pack size's SKU/price/weight/active state is a separate,
+        // explicit action from the per-variant Edit button on the
+        // Products list, not a side effect of saving the product.
         const productFormData = new FormData();
         productFormData.append("name", form.name.trim());
         if (form.slug.trim()) productFormData.append("slug", form.slug.trim());
@@ -214,30 +184,11 @@ export default function ProductModal({ categories, brands, product, onClose, onS
         if (form.brandId) productFormData.append("brandId", form.brandId);
         productFormData.append("categoryId", form.categoryId);
         productFormData.append("isActive", String(form.isActive));
+        appendNewImages(productFormData);
 
         await updateProduct(product.id, productFormData);
-        await uploadPendingImages(product.id);
 
-        const variantError = validateEditVariants();
-        if (variantError) {
-          setError(variantError);
-          setLoading(false);
-          return;
-        }
-
-        for (const variant of variants) {
-          await updateProductVariant(product.id, variant.id, {
-            sku: variant.sku.trim(),
-            weight: Number(variant.weight),
-            unit: variant.unit,
-            mrp: Number(variant.mrp),
-            sellingPrice: Number(variant.sellingPrice),
-            isActive: variant.isActive,
-            isAvailable: variant.isAvailable,
-          });
-        }
-
-        onSuccess("Product and pack sizes updated");
+        onSuccess("Product updated successfully");
         onClose();
         return;
       }
@@ -281,12 +232,11 @@ export default function ProductModal({ categories, brands, product, onClose, onS
           },
         ])
       );
+      appendNewImages(formData);
 
       const response = await createProduct(formData);
       const createdProduct = response?.data || response;
       const variantId = createdProduct?.variants?.[0]?.id;
-
-      if (createdProduct?.id) await uploadPendingImages(createdProduct.id);
 
       const initialStock = Number(form.stock) || 0;
 
@@ -561,64 +511,10 @@ export default function ProductModal({ categories, brands, product, onClose, onS
           </div>
 
           {isEdit && (
-            <>
-              <div className="h-px bg-line my-5" />
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-xs uppercase tracking-wide text-ink-faint font-bold">Pack sizes / variants</p>
-                <span className="text-xs text-ink-soft">{variants.length} variant{variants.length !== 1 ? "s" : ""}</span>
-              </div>
-
-              {variants.length === 0 ? (
-                <div className="border border-dashed border-line rounded-lg p-5 text-center text-sm text-ink-soft">
-                  No variants found.
-                </div>
-              ) : (
-                <div className="flex flex-col gap-4">
-                  {variants.map((variant, index) => (
-                    <div key={variant.id} className="border border-line rounded-lg p-4">
-                      <div className="flex justify-between items-center mb-3">
-                        <p className="text-sm font-bold text-ink">Pack size #{index + 1}</p>
-                        <span className="text-[11px] text-ink-faint">ID: {variant.id}</span>
-                      </div>
-
-                      <div className="grid grid-cols-3 gap-x-3">
-                        <Field label="SKU" required>
-                          <Input required value={variant.sku} onChange={(e) => updateVariant(variant.id, "sku", e.target.value)} />
-                        </Field>
-                        <Field label="Weight / qty" required>
-                          <Input required type="number" step="0.001" min="0" value={variant.weight} onChange={(e) => updateVariant(variant.id, "weight", e.target.value)} />
-                        </Field>
-                        <Field label="Unit">
-                          <Select value={variant.unit} onChange={(e) => updateVariant(variant.id, "unit", e.target.value)}>
-                            {UNIT_OPTIONS.map((u) => <option key={u} value={u}>{u}</option>)}
-                          </Select>
-                        </Field>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-x-3">
-                        <Field label="MRP (₹)" required>
-                          <Input required type="number" step="0.01" min="0" value={variant.mrp} onChange={(e) => updateVariant(variant.id, "mrp", e.target.value)} />
-                        </Field>
-                        <Field label="Selling price (₹)" required>
-                          <Input required type="number" step="0.01" min="0" value={variant.sellingPrice} onChange={(e) => updateVariant(variant.id, "sellingPrice", e.target.value)} />
-                        </Field>
-                      </div>
-
-                      <div className="flex flex-wrap gap-5 mt-1">
-                        <label className="flex items-center gap-2 text-sm font-semibold text-ink">
-                          <input type="checkbox" checked={variant.isActive} onChange={(e) => updateVariant(variant.id, "isActive", e.target.checked)} className="w-4 h-4 accent-brand-600" />
-                          Variant active
-                        </label>
-                        <label className="flex items-center gap-2 text-sm font-semibold text-ink">
-                          <input type="checkbox" checked={variant.isAvailable} onChange={(e) => updateVariant(variant.id, "isAvailable", e.target.checked)} className="w-4 h-4 accent-brand-600" />
-                          Available for sale
-                        </label>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </>
+            <p className="text-xs text-ink-faint mt-4">
+              To edit pack sizes (SKU, price, weight, stock), close this and use the
+              Edit button on the pack size itself.
+            </p>
           )}
 
           {!isEdit && (

@@ -1,15 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { Search, Plus, Pencil, Trash2, Eye, ImageOff, Package } from "lucide-react";
 import ProductModal from "../components/products/ProductModal";
-import ProductDetailModal from "../components/products/ProductDetailModa";
+import ProductDetailModal from "../components/products/ProductDetailModal";
 import AddVariantModal from "../components/products/AddVariantModal";
+import EditVariantModal from "../components/products/EditVariantModal";
 import ReceiveStockModal from "../components/products/ReceiveStockModal";
 import Button from "../components/ui/Button";
 import Badge from "../components/ui/Badge";
 import { Card } from "../components/ui/Card";
 import EmptyState from "../components/ui/EmptyState";
 import Modal from "../components/ui/Modal";
-import { useToast } from "../components/ui/Toast"; 
+import { useToast } from "../components/ui/Toast";
 import {
   getCategories,
   getBrands,
@@ -53,6 +54,7 @@ export default function Products() {
   const [viewLoadingId, setViewLoadingId] = useState(null);
   const [editLoadingId, setEditLoadingId] = useState(null);
   const [variantModal, setVariantModal] = useState(null);
+  const [editVariantModal, setEditVariantModal] = useState(null);
   const [stockModal, setStockModal] = useState(null);
   const [confirmDeleteProduct, setConfirmDeleteProduct] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
@@ -190,6 +192,8 @@ export default function Products() {
     await loadProducts();
   };
 
+  // Used by the per-variant Activate/Deactivate toggle — a single-field
+  // patch with no modal, so errors are caught here and surfaced as a toast.
   const handleVariantUpdate = async (productId, variantId, data) => {
     try {
       await updateProductVariant(productId, variantId, data);
@@ -198,6 +202,15 @@ export default function Products() {
     } catch (err) {
       showToast(err.message, "error");
     }
+  };
+
+  // Used by EditVariantModal — errors intentionally propagate up so the
+  // modal's own submit handler can show an inline error and stay open,
+  // same pattern as handleAddVariant.
+  const handleEditVariant = async (productId, variantId, data) => {
+    await updateProductVariant(productId, variantId, data);
+    showToast("Pack size updated successfully");
+    await loadProducts();
   };
 
   // Edit/View always re-fetch GET /products/:id so the modal never shows
@@ -426,6 +439,15 @@ export default function Products() {
                                 <Button
                                   variant="secondary"
                                   size="sm"
+                                  icon={Pencil}
+                                  onClick={() => setEditVariantModal({ productId: product.id, variant, productName: product.name })}
+                                >
+                                  Edit
+                                </Button>
+
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
                                   onClick={() => setStockModal({ productId: product.id, variant, productName: product.name })}
                                 >
                                   + Stock
@@ -491,6 +513,15 @@ export default function Products() {
           productName={variantModal.productName}
           onClose={() => setVariantModal(null)}
           onSave={(data) => handleAddVariant(variantModal.productId, data)}
+        />
+      )}
+
+      {editVariantModal && (
+        <EditVariantModal
+          productName={editVariantModal.productName}
+          variant={editVariantModal.variant}
+          onClose={() => setEditVariantModal(null)}
+          onSave={(data) => handleEditVariant(editVariantModal.productId, editVariantModal.variant.id, data)}
         />
       )}
 
