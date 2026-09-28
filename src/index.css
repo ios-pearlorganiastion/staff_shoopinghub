@@ -1,17 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Karla:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
-/*
- * Design tokens — single source of truth for color, type, radius, shadow.
- * Every component should reach for these Tailwind utilities (bg-brand-600,
- * text-ink, font-sans, rounded-xl, shadow-float...) instead of one-off
- * arbitrary values like bg-[#1b7340] or rounded-[14px].
- */
 @theme {
   --font-sans: "Karla", ui-sans-serif, system-ui, sans-serif;
 
-  /* Ink / paper — the neutral scale, tinted toward the brand green rather
-     than generic slate/gray, so "neutral" UI still feels like this product. */
   --color-ink: #14231a;
   --color-ink-soft: #56645c;
   --color-ink-faint: #8b968f;
@@ -19,7 +11,6 @@
   --color-line: #e2e7dc;
   --color-card: #ffffff;
 
-  /* Brand green — primary actions, active nav, positive states. */
   --color-brand-50: #eef8f1;
   --color-brand-100: #d8f0e0;
   --color-brand-200: #b3e0c3;
@@ -27,28 +18,6 @@
   --color-brand-600: #1f7a4d;
   --color-brand-700: #145c35;
   --color-brand-800: #0f4929;
-
-  /* Amber — low stock / pending / needs-attention. */
-  --color-amber-50: #fdf3e7;
-  --color-amber-500: #c97a2b;
-  --color-amber-700: #8a5a1c;
-
-  /* Rose — destructive / cancelled / failed. */
-  --color-rose-50: #fbebe8;
-  --color-rose-500: #b23b2e;
-  --color-rose-700: #8a2a20;
-
-  /* Blue — informational / in-transit states used by order statuses. */
-  --color-sky-50: #e9f1fb;
-  --color-sky-600: #1c5fa8;
-
-  /* Violet / teal — extra order-status accents (packed / ready) so the
-     status chip stays scannable at a glance without reusing brand green
-     for every "in progress" state. */
-  --color-violet-50: #efe9f8;
-  --color-violet-600: #6032a8;
-  --color-teal-50: #e3f5f0;
-  --color-teal-600: #0f6b58;
 
   --radius-md: 0.625rem;
   --radius-lg: 0.875rem;
@@ -72,17 +41,31 @@ body {
 button {
   font-family: inherit;
   cursor: pointer;
+  outline: none;
 }
 
 input,
 select,
 textarea {
   font-family: inherit;
+  outline: none;
 }
 
-:focus-visible {
-  outline: 2px solid var(--color-brand-500);
-  outline-offset: 2px;
+*:focus,
+*:focus-visible {
+  outline: none !important;
+}
+
+button:focus,
+button:focus-visible,
+input:focus,
+input:focus-visible,
+select:focus,
+select:focus-visible,
+textarea:focus,
+textarea:focus-visible {
+  outline: none !important;
+  box-shadow: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

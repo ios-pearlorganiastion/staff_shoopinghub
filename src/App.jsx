@@ -7,6 +7,7 @@ import Products from "./pages/Products";
 import Categories from "./pages/Categories";
 import Brand from "./pages/Brand";
 import Customers from "./pages/Customers";
+import Staff from "./pages/Staff";
 import Settings from "./pages/Settings";
 
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -26,6 +27,7 @@ function App() {
             <Route path="/categories" element={<Categories />} />
             <Route path="/brand" element={<Brand />} />
             <Route path="/customers" element={<Customers />} />
+            <Route path="/staff" element={<Staff />} />
             <Route path="/settings" element={<Settings />} />
           </Route>
         </Route>

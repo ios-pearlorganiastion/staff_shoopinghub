@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import {
   RefreshCw,
@@ -9,9 +8,12 @@ import {
   MapPin,
   CreditCard,
   Package,
-  Clock3,
   CheckCircle2,
+  Clock3,
+  Truck,
+  XCircle,
 } from "lucide-react";
+import { motion } from "framer-motion";
 
 const ordersData = [
   {
@@ -108,164 +110,313 @@ const STATUS_LABEL = {
 };
 
 const STATUS_STYLE = {
-  PENDING_PAYMENT: "bg-amber-50 text-amber-700 border-amber-200",
-  CONFIRMED: "bg-sky-50 text-sky-700 border-sky-200",
-  PACKED: "bg-violet-50 text-violet-700 border-violet-200",
-  READY: "bg-teal-50 text-teal-700 border-teal-200",
-  COMPLETED: "bg-brand-50 text-brand-700 border-brand-200",
-  CANCELLED: "bg-rose-50 text-rose-700 border-rose-200",
+  PENDING_PAYMENT: "bg-[#f7f2df] text-[#a07824]",
+  CONFIRMED: "bg-[#edf4e7] text-[#527e45]",
+  PACKED: "bg-[#f1f5e9] text-[#527e45]",
+  READY: "bg-[#eef5e7] text-[#315d32]",
+  COMPLETED: "bg-[#eef5e7] text-[#315d32]",
+  CANCELLED: "bg-[#f8ecea] text-[#b35a54]",
 };
 
-const STATUS_DOT = {
-  PENDING_PAYMENT: "bg-amber-500",
-  CONFIRMED: "bg-sky-500",
-  PACKED: "bg-violet-500",
-  READY: "bg-teal-500",
-  COMPLETED: "bg-brand-500",
-  CANCELLED: "bg-rose-500",
+const STATUS_ICON = {
+  PENDING_PAYMENT: Clock3,
+  CONFIRMED: CheckCircle2,
+  PACKED: Package,
+  READY: Truck,
+  COMPLETED: CheckCircle2,
+  CANCELLED: XCircle,
+};
+
+const pageVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.07,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: {
+    opacity: 0,
+    y: 18,
+  },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.45,
+      ease: "easeOut",
+    },
+  },
 };
 
 function StatusBadge({ status }) {
+  const Icon = STATUS_ICON[status] || Clock3;
+
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-[10px] font-bold sm:text-[11px] ${STATUS_STYLE[status]}`}
+    <motion.span
+      whileHover={{
+        scale: 1.05,
+        y: -1,
+      }}
+      className={`inline-flex max-w-full min-h-6 shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-full px-2 py-1 text-[7px] font-black sm:min-h-7 sm:gap-1.5 sm:px-2.5 sm:text-[9px] ${STATUS_STYLE[status]}`}
     >
-      <span
-        className={`h-1.5 w-1.5 rounded-full ${STATUS_DOT[status]}`}
-      />
-      {STATUS_LABEL[status]}
-    </span>
+      <Icon className="h-2.5 w-2.5 shrink-0 sm:h-3 sm:w-3" />
+      <span className="truncate">{STATUS_LABEL[status]}</span>
+    </motion.span>
   );
 }
 
-function OrderModal({ order, close, action }) {
-  if (!order) return null;
+function OrderDetailsModal({ order, onClose, onAction }) {
+  const items = [
+    { name: "Organic Rice", qty: 2, price: 500 },
+    { name: "Premium Atta", qty: 1, price: 299 },
+    { name: "Cooking Oil", qty: 1, price: 500 },
+  ];
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-end justify-center bg-slate-950/50 p-0 backdrop-blur-sm sm:items-center sm:p-5">
-      <div className="w-full max-h-[94vh] overflow-hidden rounded-t-[28px] bg-white shadow-2xl sm:max-w-xl sm:rounded-[28px]">
-        <div className="relative overflow-hidden bg-gradient-to-br from-brand-700 via-brand-600 to-brand-500 px-5 pb-6 pt-5 text-white sm:px-7">
-          <div className="absolute -right-12 -top-16 h-40 w-40 rounded-full bg-white/10" />
-          <div className="absolute -bottom-20 -left-10 h-40 w-40 rounded-full bg-white/10" />
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-[#202a20]/45 p-2 backdrop-blur-sm sm:p-5"
+    >
+      <motion.div
+        initial={{
+          opacity: 0,
+          scale: 0.96,
+          y: 15,
+        }}
+        animate={{
+          opacity: 1,
+          scale: 1,
+          y: 0,
+        }}
+        transition={{
+          duration: 0.25,
+          ease: "easeOut",
+        }}
+        className="flex max-h-[96vh] w-full max-w-[540px] flex-col overflow-hidden rounded-[18px] border border-[#dceacb] bg-white shadow-[0_25px_80px_rgba(49,93,50,0.2)] sm:max-h-[90vh] sm:rounded-[26px]"
+      >
+        <div className="relative shrink-0 overflow-hidden bg-[#315d32] px-3.5 py-4 text-white sm:px-6 sm:py-6">
+          <motion.div
+            animate={{
+              scale: [1, 1.08, 1],
+              opacity: [0.15, 0.25, 0.15],
+            }}
+            transition={{
+              duration: 5,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+            className="absolute -right-20 -top-24 h-64 w-64 rounded-full bg-[#b8df7d]/20 blur-2xl"
+          />
 
-          <div className="relative flex items-start justify-between gap-4">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/70">
+          <motion.div
+            animate={{
+              x: [0, 15, 0],
+              y: [0, -8, 0],
+            }}
+            transition={{
+              duration: 6,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+            className="absolute -bottom-24 left-1/3 h-52 w-52 rounded-full bg-white/10 blur-2xl"
+          />
+
+          <div className="relative flex items-start justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <p className="text-[8px] font-bold uppercase tracking-[0.18em] text-white/60">
                 Order details
               </p>
-              <h3 className="mt-1 text-xl font-extrabold sm:text-2xl">
+
+              <h3 className="mt-1 truncate text-lg font-black tracking-tight sm:text-2xl">
                 {order.number}
               </h3>
-              <p className="mt-1 text-xs text-white/75">
+
+              <p className="mt-1 text-[9px] text-white/70 sm:text-xs">
                 {order.date}
               </p>
             </div>
 
-            <button
-              onClick={close}
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white transition hover:bg-white/25"
+            <motion.button
+              whileHover={{
+                scale: 1.08,
+                rotate: 5,
+              }}
+              whileTap={{
+                scale: 0.92,
+              }}
+              onClick={onClose}
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/10 text-white transition hover:bg-white/20 sm:h-9 sm:w-9"
             >
-              <X size={18} />
-            </button>
+              <X size={17} />
+            </motion.button>
           </div>
 
-          <div className="relative mt-5 flex items-center justify-between rounded-2xl bg-white/10 p-3 backdrop-blur">
-            <div>
-              <p className="text-[10px] text-white/65">Customer</p>
-              <p className="mt-0.5 font-bold">{order.customer}</p>
+          <div className="relative mt-3 flex min-w-0 items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/10 p-2.5 backdrop-blur sm:mt-4 sm:p-3">
+            <div className="min-w-0">
+              <p className="text-[8px] text-white/55 sm:text-[9px]">
+                Customer
+              </p>
+
+              <p className="mt-0.5 truncate text-[11px] font-bold sm:text-sm">
+                {order.customer}
+              </p>
             </div>
+
             <StatusBadge status={order.status} />
           </div>
         </div>
 
-        <div className="max-h-[58vh] overflow-y-auto p-5 sm:p-7">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
-              <Package size={18} className="text-brand-600" />
-              <p className="mt-3 text-[10px] font-bold uppercase tracking-wider text-ink-soft">
+        <div className="min-h-0 flex-1 overflow-y-auto p-2.5 sm:p-5">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3">
+            <div className="rounded-xl border border-[#dceacb] bg-[#f7f8f2] p-2.5 sm:p-3">
+              <Package size={16} className="text-[#315d32]" />
+
+              <p className="mt-2 text-[8px] font-bold uppercase tracking-wider text-[#92998e]">
                 Items
               </p>
-              <p className="mt-1 text-xl font-extrabold text-ink">
+
+              <p className="mt-1 text-base font-black text-[#202a20]">
                 {order.items}
               </p>
             </div>
 
-            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
-              <CreditCard size={18} className="text-brand-600" />
-              <p className="mt-3 text-[10px] font-bold uppercase tracking-wider text-ink-soft">
+            <div className="rounded-xl border border-[#dceacb] bg-[#f7f8f2] p-2.5 sm:p-3">
+              <CreditCard size={16} className="text-[#315d32]" />
+
+              <p className="mt-2 text-[8px] font-bold uppercase tracking-wider text-[#92998e]">
                 Payment
               </p>
-              <p className="mt-1 text-xl font-extrabold text-ink">
+
+              <p className="mt-1 text-base font-black text-[#202a20]">
                 {order.payment}
               </p>
             </div>
           </div>
 
-          <div className="mt-3 rounded-2xl border border-brand-100 bg-brand-50/60 p-4">
+          <div className="mt-2.5 rounded-xl border border-[#dceacb] bg-[#eef5e7] p-3 sm:mt-3 sm:p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-brand-700">
+                <p className="text-[8px] font-bold uppercase tracking-wider text-[#315d32]">
                   Total amount
                 </p>
-                <p className="mt-1 text-2xl font-extrabold text-ink">
+
+                <p className="mt-1 text-lg font-black text-[#202a20] sm:text-2xl">
                   ₹{order.amount.toLocaleString()}
                 </p>
               </div>
 
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-brand-600 shadow-sm">
-                <CreditCard size={20} />
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white text-[#315d32] shadow-sm sm:h-10 sm:w-10">
+                <CreditCard size={16} />
               </div>
             </div>
           </div>
 
-          <div className="mt-3 space-y-3">
-            <div className="flex gap-3 rounded-2xl border border-slate-100 p-4">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
-                <Phone size={17} />
+          <div className="mt-2.5 space-y-2 sm:mt-3 sm:space-y-3">
+            <div className="flex gap-2 rounded-xl border border-[#dceacb] p-2.5 sm:p-3.5">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#eef5e7] text-[#315d32]">
+                <Phone size={14} />
               </div>
+
               <div className="min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-ink-soft">
+                <p className="text-[8px] font-bold uppercase tracking-wider text-[#92998e]">
                   Phone
                 </p>
-                <p className="mt-1 break-all text-sm font-semibold text-ink">
+
+                <p className="mt-0.5 break-all text-[11px] font-semibold text-[#202a20] sm:text-sm">
                   {order.phone}
                 </p>
               </div>
             </div>
 
-            <div className="flex gap-3 rounded-2xl border border-slate-100 p-4">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
-                <MapPin size={17} />
+            <div className="flex gap-2 rounded-xl border border-[#dceacb] p-2.5 sm:p-3.5">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#eef5e7] text-[#315d32]">
+                <MapPin size={14} />
               </div>
+
               <div className="min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-ink-soft">
+                <p className="text-[8px] font-bold uppercase tracking-wider text-[#92998e]">
                   Delivery address
                 </p>
-                <p className="mt-1 text-sm font-semibold leading-6 text-ink">
+
+                <p className="mt-0.5 text-[11px] font-semibold leading-5 text-[#202a20] sm:text-sm">
                   {order.address}
                 </p>
               </div>
             </div>
           </div>
+
+          <div className="mt-2.5 rounded-xl border border-[#edf1e9] bg-[#f7f8f2] p-2.5 sm:mt-3 sm:p-3.5">
+            <div className="mb-2.5 flex items-center justify-between">
+              <div>
+                <p className="text-[8px] font-bold uppercase tracking-wider text-[#92998e]">
+                  Order items
+                </p>
+
+                <p className="mt-0.5 text-[11px] font-black text-[#202a20]">
+                  {items.length} products
+                </p>
+              </div>
+
+              <Package className="h-4 w-4 text-[#315d32]" />
+            </div>
+
+            <div className="space-y-1.5 sm:space-y-2">
+              {items.map((item) => (
+                <div
+                  key={item.name}
+                  className="flex items-center justify-between gap-2 rounded-lg bg-white px-2.5 py-2.5"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-[10px] font-bold text-[#202a20]">
+                      {item.name}
+                    </p>
+
+                    <p className="mt-0.5 text-[8px] text-[#92998e]">
+                      Qty: {item.qty}
+                    </p>
+                  </div>
+
+                  <span className="shrink-0 text-[10px] font-black text-[#315d32]">
+                    ₹{item.price.toLocaleString()}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
-        <div className="flex flex-col-reverse gap-2 border-t border-slate-100 p-4 sm:flex-row sm:justify-end sm:px-7">
-          <button
-            onClick={close}
-            className="h-11 rounded-xl border border-slate-200 px-5 text-sm font-bold text-slate-600 transition hover:bg-slate-50"
-          >
-            Close
-          </button>
+        <div className="shrink-0 border-t border-[#edf1e9] bg-white p-2.5 sm:px-5 sm:py-3.5">
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <motion.button
+              whileTap={{
+                scale: 0.97,
+              }}
+              onClick={onClose}
+              className="h-10 w-full rounded-xl border border-[#dceacb] px-5 text-xs font-bold text-[#667065] transition hover:bg-[#f7f8f2] sm:w-auto"
+            >
+              Close
+            </motion.button>
 
-          <button
-            onClick={() => action("Order updated successfully")}
-            className="h-11 rounded-xl bg-brand-600 px-5 text-sm font-bold text-white shadow-lg shadow-brand-600/20 transition hover:bg-brand-700"
-          >
-            Update Order
-          </button>
+            {!["COMPLETED", "CANCELLED"].includes(order.status) && (
+              <motion.button
+                whileTap={{
+                  scale: 0.97,
+                }}
+                onClick={() => onAction("Order updated successfully")}
+                className="h-10 w-full rounded-xl bg-[#315d32] px-5 text-xs font-bold text-white shadow-[0_8px_20px_rgba(49,93,50,0.2)] transition hover:bg-[#274d29] sm:w-auto"
+              >
+                Update Order
+              </motion.button>
+            )}
+          </div>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -273,6 +424,7 @@ export default function Orders() {
   const [filter, setFilter] = useState("");
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [toast, setToast] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
 
   const orders = filter
     ? ordersData.filter((order) => order.status === filter)
@@ -280,249 +432,384 @@ export default function Orders() {
 
   const showToast = (message) => {
     setToast(message);
-    setTimeout(() => setToast(""), 2200);
+
+    setTimeout(() => {
+      setToast("");
+    }, 2200);
+  };
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+
+    setTimeout(() => {
+      setRefreshing(false);
+      showToast("Orders refreshed");
+    }, 800);
   };
 
   return (
-    <div className="w-full min-w-0 space-y-5 pb-8 sm:space-y-6">
-      {toast && (
-        <div className="fixed right-4 top-4 z-[120] rounded-xl bg-brand-700 px-4 py-3 text-sm font-semibold text-white shadow-xl sm:right-6 sm:top-6">
-          {toast}
-        </div>
-      )}
-
-      <section className="relative overflow-hidden rounded-[24px] bg-gradient-to-br from-brand-700 via-brand-600 to-brand-500 px-5 py-6 text-white shadow-lg shadow-brand-600/10 sm:px-7 sm:py-7 lg:px-8">
-        <div className="absolute -right-16 -top-20 h-56 w-56 rounded-full bg-white/10" />
-        <div className="absolute -bottom-28 left-1/3 h-64 w-64 rounded-full bg-white/5" />
-
-        <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/15 shadow-inner backdrop-blur sm:h-14 sm:w-14">
-              <ShoppingBag size={24} />
-            </div>
-
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/65">
-                Management
-              </p>
-
-              <h2 className="mt-1 text-2xl font-extrabold tracking-tight sm:text-3xl">
-                Orders
-              </h2>
-
-              <p className="mt-1.5 max-w-md text-xs leading-5 text-white/75 sm:text-sm">
-                Track, manage and fulfill customer orders from one place.
-              </p>
-            </div>
-          </div>
-
-          <button
-            onClick={() => showToast("Orders refreshed")}
-            className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-bold text-brand-700 shadow-md transition hover:bg-white/90 md:w-auto"
+    <motion.div
+      variants={pageVariants}
+      initial="hidden"
+      animate="show"
+      className="box-border w-full min-w-0 max-w-full overflow-x-hidden bg-[#f7f8f2] pb-5 sm:pb-8"
+    >
+      <div className="mx-auto w-full max-w-[1600px] min-w-0 space-y-3 px-2 sm:space-y-5 sm:px-3 md:px-4 lg:space-y-6 lg:px-5">
+        {toast && (
+          <motion.div
+            initial={{
+              opacity: 0,
+              y: -15,
+              scale: 0.96,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+              scale: 1,
+            }}
+            className="fixed right-2.5 top-2.5 z-[120] max-w-[calc(100vw-20px)] rounded-xl bg-[#315d32] px-3.5 py-2.5 text-[11px] font-semibold text-white shadow-[0_12px_30px_rgba(49,93,50,0.22)] sm:right-6 sm:top-6 sm:text-sm"
           >
-            <RefreshCw size={16} />
-            Refresh Orders
-          </button>
-        </div>
+            {toast}
+          </motion.div>
+        )}
 
-        <div className="relative mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <div className="rounded-2xl bg-white/10 p-3 backdrop-blur">
-            <p className="text-[10px] font-semibold text-white/60">
-              Total
-            </p>
-            <p className="mt-1 text-xl font-extrabold">
-              {ordersData.length}
-            </p>
-          </div>
+        <motion.section
+          variants={itemVariants}
+          className="group relative overflow-hidden rounded-[18px] bg-[#315d32] px-3 py-4 text-white shadow-[0_20px_60px_rgba(49,93,50,0.18)] sm:rounded-[28px] sm:px-6 sm:py-7 lg:px-8 lg:py-8"
+        >
+          <motion.div
+            animate={{
+              scale: [1, 1.08, 1],
+              opacity: [0.18, 0.28, 0.18],
+            }}
+            transition={{
+              duration: 5,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+            className="absolute -right-20 -top-24 h-72 w-72 rounded-full bg-[#b8df7d]/20 blur-2xl"
+          />
 
-          <div className="rounded-2xl bg-white/10 p-3 backdrop-blur">
-            <p className="text-[10px] font-semibold text-white/60">
-              Pending
-            </p>
-            <p className="mt-1 text-xl font-extrabold">
-              {ordersData.filter(
-                (o) => o.status === "PENDING_PAYMENT"
-              ).length}
-            </p>
-          </div>
+          <motion.div
+            animate={{
+              x: [0, 20, 0],
+              y: [0, -10, 0],
+            }}
+            transition={{
+              duration: 7,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+            className="absolute -bottom-28 left-[28%] h-64 w-64 rounded-full bg-white/10 blur-3xl"
+          />
 
-          <div className="rounded-2xl bg-white/10 p-3 backdrop-blur">
-            <p className="text-[10px] font-semibold text-white/60">
-              Active
-            </p>
-            <p className="mt-1 text-xl font-extrabold">
-              {
-                ordersData.filter((o) =>
-                  ["CONFIRMED", "PACKED", "READY"].includes(o.status)
-                ).length
-              }
-            </p>
-          </div>
+          <div className="relative">
+            <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex min-w-0 items-start gap-2.5 sm:gap-3">
+                <motion.div
+                  whileHover={{
+                    scale: 1.08,
+                    rotate: 4,
+                  }}
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/10 shadow-inner backdrop-blur sm:h-12 sm:w-12 sm:rounded-2xl"
+                >
+                  <ShoppingBag className="h-4 w-4 sm:h-6 sm:w-6" />
+                </motion.div>
 
-          <div className="rounded-2xl bg-white/10 p-3 backdrop-blur">
-            <p className="text-[10px] font-semibold text-white/60">
-              Completed
-            </p>
-            <p className="mt-1 text-xl font-extrabold">
-              {ordersData.filter((o) => o.status === "COMPLETED").length}
-            </p>
-          </div>
-        </div>
-      </section>
+                <div className="min-w-0">
+                  <div className="mb-1 flex items-center gap-1.5 sm:mb-1.5 sm:gap-2">
+                    <motion.span
+                      animate={{
+                        scale: [1, 1.35, 1],
+                        opacity: [0.7, 1, 0.7],
+                      }}
+                      transition={{
+                        duration: 1.8,
+                        repeat: Infinity,
+                      }}
+                      className="h-1.5 w-1.5 rounded-full bg-[#b8df7d] sm:h-2 sm:w-2"
+                    />
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
-        <div className="mb-3 px-1">
-          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-ink-soft">
-            Order status
-          </p>
-        </div>
+                    <span className="text-[7px] font-bold uppercase tracking-[0.18em] text-white/60 sm:text-[10px]">
+                      Order management
+                    </span>
+                  </div>
 
-        <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {STATUSES.map(([value, label]) => {
-            const active = filter === value;
+                  <h1 className="text-[20px] font-black tracking-tight sm:text-3xl lg:text-[34px]">
+                    Orders
+                  </h1>
 
-            return (
-              <button
-                key={value}
-                onClick={() => setFilter(value)}
-                className={`shrink-0 rounded-xl px-4 py-2.5 text-xs font-bold transition-all sm:text-sm ${
-                  active
-                    ? "bg-brand-600 text-white shadow-md shadow-brand-600/20"
-                    : "border border-slate-200 bg-white text-slate-600 hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700"
-                }`}
+                  <p className="mt-1 max-w-xl text-[9px] leading-4 text-white/70 sm:mt-1.5 sm:text-sm sm:leading-5">
+                    Track, manage and fulfill customer orders from one
+                    beautiful workspace.
+                  </p>
+                </div>
+              </div>
+
+              <motion.button
+                whileTap={{
+                  scale: 0.96,
+                }}
+                onClick={handleRefresh}
+                className="inline-flex min-h-9 w-full items-center justify-center gap-2 rounded-xl bg-white px-4 text-[9px] font-bold text-[#315d32] shadow-lg transition-all sm:min-h-10 sm:w-auto sm:text-xs"
               >
-                {label}
-              </button>
-            );
-          })}
-        </div>
-      </section>
+                <RefreshCw
+                  className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${
+                    refreshing ? "animate-spin" : ""
+                  }`}
+                />
+                Refresh Orders
+              </motion.button>
+            </div>
+          </div>
+        </motion.section>
 
-      <div className="flex items-end justify-between px-1">
-        <div>
-          <h3 className="text-base font-extrabold text-ink sm:text-lg">
-            {filter
-              ? STATUSES.find(([value]) => value === filter)?.[1]
-              : "All Orders"}
-          </h3>
-
-          <p className="mt-0.5 text-xs text-ink-soft sm:text-sm">
-            Showing {orders.length}{" "}
-            {orders.length === 1 ? "order" : "orders"}
-          </p>
-        </div>
-
-        <div className="hidden items-center gap-1.5 text-xs font-bold text-brand-700 sm:flex">
-          <CheckCircle2 size={15} />
-          Updated
-        </div>
-      </div>
-
-      {orders.length === 0 ? (
-        <div className="rounded-[24px] border border-slate-200 bg-white px-5 py-14 text-center shadow-sm">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-50 text-brand-600">
-            <ShoppingBag size={27} />
+        <motion.section
+          variants={itemVariants}
+          className="overflow-hidden rounded-[18px] border border-[#dceacb] bg-white shadow-[0_8px_30px_rgba(49,93,50,0.06)] sm:rounded-[24px]"
+        >
+          <div className="border-b border-[#edf1e9] px-3 py-3 sm:px-5 sm:py-4">
+            <p className="text-[8px] font-bold uppercase tracking-[0.16em] text-[#92998e] sm:text-[9px]">
+              Order status
+            </p>
           </div>
 
-          <h3 className="mt-5 text-lg font-extrabold text-ink">
-            No orders found
-          </h3>
+          <div className="flex gap-1.5 overflow-x-auto p-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:gap-2 sm:p-3">
+            {STATUSES.map(([value, label]) => {
+              const active = filter === value;
 
-          <p className="mx-auto mt-1 max-w-sm text-sm leading-6 text-ink-soft">
-            There are no orders matching the selected status.
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-3 sm:space-y-4">
-          {orders.map((order, index) => (
-            <div
-              key={order.id}
-              onClick={() => setSelectedOrder(order)}
-              className="group relative cursor-pointer overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-brand-300 hover:shadow-lg"
-            >
-              <div className="absolute bottom-0 left-0 top-0 w-1 bg-brand-600 opacity-0 transition-opacity group-hover:opacity-100" />
+              return (
+                <motion.button
+                  key={value}
+                  whileTap={{
+                    scale: 0.96,
+                  }}
+                  onClick={() => setFilter(value)}
+                  className={`shrink-0 rounded-xl px-3 py-2 text-[8px] font-bold transition-all sm:px-3.5 sm:text-xs ${
+                    active
+                      ? "bg-[#315d32] text-white shadow-[0_6px_18px_rgba(49,93,50,0.18)]"
+                      : "border border-[#dceacb] bg-white text-[#667065] hover:border-[#b8df7d] hover:bg-[#eef5e7] hover:text-[#315d32]"
+                  }`}
+                >
+                  {label}
+                </motion.button>
+              );
+            })}
+          </div>
+        </motion.section>
 
-              <div className="p-4 sm:p-5 lg:p-6">
-                <div className="flex flex-col gap-5 lg:flex-row lg:items-center">
-                  <div className="flex min-w-0 flex-1 items-center gap-3.5">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand-50 text-brand-600 transition-all group-hover:bg-brand-600 group-hover:text-white sm:h-12 sm:w-12">
-                      <ShoppingBag size={19} />
+        <motion.div
+          variants={itemVariants}
+          className="flex items-end justify-between px-0.5 sm:px-1"
+        >
+          <div>
+            <h3 className="text-[13px] font-black tracking-tight text-[#202a20] sm:text-base">
+              {filter
+                ? STATUSES.find(([value]) => value === filter)?.[1]
+                : "All Orders"}
+            </h3>
+
+            <p className="mt-0.5 text-[9px] text-[#92998e] sm:text-xs">
+              Showing {orders.length}{" "}
+              {orders.length === 1 ? "order" : "orders"}
+            </p>
+          </div>
+
+          <div className="hidden items-center gap-1.5 text-[10px] font-bold text-[#315d32] sm:flex sm:text-xs">
+            <CheckCircle2 size={15} />
+            Updated
+          </div>
+        </motion.div>
+
+        {orders.length === 0 ? (
+          <motion.div
+            variants={itemVariants}
+            className="rounded-[18px] border border-[#dceacb] bg-white px-4 py-10 text-center shadow-[0_8px_30px_rgba(49,93,50,0.06)] sm:py-14"
+          >
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#eef5e7] text-[#315d32]">
+              <ShoppingBag size={25} />
+            </div>
+
+            <h3 className="mt-4 text-base font-black text-[#202a20] sm:text-lg">
+              No orders found
+            </h3>
+
+            <p className="mx-auto mt-1 max-w-sm text-xs leading-5 text-[#92998e] sm:text-sm sm:leading-6">
+              There are no orders matching the selected status.
+            </p>
+          </motion.div>
+        ) : (
+          <motion.div
+            variants={pageVariants}
+            className="grid w-full min-w-0 grid-cols-1 gap-2 sm:gap-3"
+          >
+            {orders.map((order) => (
+              <motion.div
+                key={order.id}
+                variants={itemVariants}
+                whileHover={{
+                  y: -3,
+                }}
+                whileTap={{
+                  scale: 0.99,
+                }}
+                onClick={() => setSelectedOrder(order)}
+                className="group relative w-full min-w-0 cursor-pointer overflow-hidden rounded-[16px] border border-[#dceacb] bg-white shadow-[0_8px_30px_rgba(49,93,50,0.05)] transition-all duration-300 hover:border-[#b8df7d] hover:shadow-[0_18px_45px_rgba(49,93,50,0.12)] sm:rounded-[22px]"
+              >
+                <div className="absolute bottom-0 left-0 top-0 w-1 bg-[#315d32] opacity-0 transition-opacity group-hover:opacity-100" />
+
+                <div className="w-full min-w-0 p-3 sm:p-4 lg:p-5">
+                  <div className="flex w-full min-w-0 flex-col">
+                    <div className="flex w-full min-w-0 items-start gap-2.5 sm:gap-3">
+                      <motion.div
+                        whileHover={{
+                          rotate: 5,
+                          scale: 1.08,
+                        }}
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#eef5e7] text-[#315d32] transition-all duration-300 group-hover:bg-[#315d32] group-hover:text-white sm:h-11 sm:w-11"
+                      >
+                        <ShoppingBag size={16} />
+                      </motion.div>
+
+                      <div className="min-w-0 flex-1 overflow-hidden">
+                        <div className="flex min-w-0 items-center gap-1.5">
+                          <h4 className="min-w-0 flex-1 truncate text-[11px] font-black text-[#202a20] sm:text-sm">
+                            #{order.number}
+                          </h4>
+
+                          <span className="shrink-0 rounded-md bg-[#f7f8f2] px-1.5 py-1 text-[7px] font-bold uppercase tracking-wider text-[#667065] sm:px-2 sm:text-[8px]">
+                            {order.payment}
+                          </span>
+                        </div>
+
+                        <p className="mt-1 truncate text-[11px] font-bold text-[#202a20] sm:text-sm">
+                          {order.customer}
+                        </p>
+
+                        <p className="mt-0.5 truncate text-[9px] text-[#92998e] sm:text-xs">
+                          {order.items}{" "}
+                          {order.items === 1 ? "item" : "items"}
+                          <span className="mx-1.5 text-[#dceacb]">
+                            •
+                          </span>
+                          {order.date}
+                        </p>
+                      </div>
                     </div>
 
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h4 className="text-base font-extrabold text-ink sm:text-lg">
-                          {order.number}
-                        </h4>
+                    <div className="mt-3 flex w-full min-w-0 items-center justify-between gap-2 border-t border-[#edf1e9] pt-2.5 sm:mt-4 sm:pt-3 lg:hidden">
+                      <div className="min-w-0">
+                        <p className="text-[7px] font-bold uppercase tracking-widest text-[#92998e] sm:text-[9px]">
+                          Amount
+                        </p>
 
-                        <span className="rounded-lg bg-slate-100 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-slate-500">
-                          {order.payment}
+                        <p className="mt-0.5 text-sm font-black text-[#202a20] sm:text-lg">
+                          ₹{order.amount.toLocaleString()}
+                        </p>
+                      </div>
+
+                      <div className="min-w-0 max-w-[55%]">
+                        <StatusBadge status={order.status} />
+                      </div>
+                    </div>
+
+                    <div className="mt-2.5 grid w-full min-w-0 grid-cols-1 gap-1.5 border-t border-[#edf1e9] pt-2.5 sm:mt-3 sm:gap-2 sm:pt-3 lg:hidden">
+                      <div className="flex min-w-0 items-center gap-1.5">
+                        <MapPin
+                          size={12}
+                          className="shrink-0 text-[#315d32]"
+                        />
+
+                        <span className="min-w-0 truncate text-[9px] text-[#92998e] sm:text-xs">
+                          {order.address}
                         </span>
                       </div>
 
-                      <p className="mt-1 font-semibold text-ink">
-                        {order.customer}
-                      </p>
+                      <div className="flex min-w-0 items-center gap-1.5">
+                        <Phone
+                          size={12}
+                          className="shrink-0 text-[#315d32]"
+                        />
 
-                      <p className="mt-1 text-xs text-ink-soft sm:text-sm">
-                        {order.items}{" "}
-                        {order.items === 1 ? "item" : "items"}
-                        <span className="mx-1.5 text-slate-300">•</span>
-                        {order.date}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 items-center gap-3 border-t border-slate-100 pt-4 sm:grid-cols-[1fr_auto_auto] sm:border-t-0 sm:pt-0 lg:min-w-[410px]">
-                    <div className="sm:text-right">
-                      <p className="text-[9px] font-bold uppercase tracking-widest text-ink-soft">
-                        Amount
-                      </p>
-                      <p className="mt-0.5 text-lg font-extrabold text-ink sm:text-xl">
-                        ₹{order.amount.toLocaleString()}
-                      </p>
+                        <span className="truncate text-[9px] text-[#92998e] sm:text-xs">
+                          {order.phone}
+                        </span>
+                      </div>
                     </div>
 
-                    <div className="flex justify-end">
-                      <StatusBadge status={order.status} />
+                    <div className="hidden lg:flex lg:w-full lg:items-center lg:gap-5">
+                      <div className="min-w-0 flex-1">
+                        <div className="mt-4 flex items-center justify-between gap-5 border-t border-[#edf1e9] pt-3">
+                          <div className="flex min-w-0 items-center gap-2 text-xs text-[#92998e]">
+                            <MapPin
+                              size={13}
+                              className="shrink-0 text-[#315d32]"
+                            />
+
+                            <span className="truncate">
+                              {order.address}
+                            </span>
+                          </div>
+
+                          <div className="flex shrink-0 items-center gap-2 text-xs font-semibold text-[#92998e]">
+                            <Phone
+                              size={13}
+                              className="text-[#315d32]"
+                            />
+                            {order.phone}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex shrink-0 items-center gap-4">
+                        <div className="text-right">
+                          <p className="text-[9px] font-bold uppercase tracking-widest text-[#92998e]">
+                            Amount
+                          </p>
+
+                          <p className="mt-0.5 text-lg font-black text-[#202a20]">
+                            ₹{order.amount.toLocaleString()}
+                          </p>
+                        </div>
+
+                        <StatusBadge status={order.status} />
+
+                        <motion.div
+                          whileHover={{
+                            scale: 1.08,
+                            x: 2,
+                          }}
+                          className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#f7f8f2] text-[#92998e] transition-all group-hover:bg-[#eef5e7] group-hover:text-[#315d32]"
+                        >
+                          <ChevronRight size={16} />
+                        </motion.div>
+                      </div>
                     </div>
 
-                    <div className="hidden h-9 w-9 items-center justify-center rounded-xl bg-slate-50 text-slate-400 transition-all group-hover:bg-brand-50 group-hover:text-brand-600 sm:flex">
-                      <ChevronRight size={18} />
+                    <div className="mt-2 flex justify-end sm:hidden">
+                      <span className="flex items-center gap-1 text-[8px] font-bold text-[#315d32]">
+                        View details
+                        <ChevronRight size={11} />
+                      </span>
                     </div>
                   </div>
                 </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
 
-                <div className="mt-5 hidden border-t border-slate-100 pt-4 lg:block">
-                  <div className="flex items-center justify-between gap-6">
-                    <div className="flex min-w-0 items-center gap-2 text-xs text-ink-soft">
-                      <MapPin size={14} className="shrink-0 text-brand-600" />
-                      <span className="truncate">{order.address}</span>
-                    </div>
-
-                    <div className="flex shrink-0 items-center gap-2 text-xs font-semibold text-ink-soft">
-                      <Phone size={14} className="text-brand-600" />
-                      {order.phone}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {selectedOrder && (
-        <OrderModal
-          order={selectedOrder}
-          close={() => setSelectedOrder(null)}
-          action={(message) => {
-            setSelectedOrder(null);
-            showToast(message);
-          }}
-        />
-      )}
-    </div>
+        {selectedOrder && (
+          <OrderDetailsModal
+            order={selectedOrder}
+            onClose={() => setSelectedOrder(null)}
+            onAction={(message) => {
+              setSelectedOrder(null);
+              showToast(message);
+            }}
+          />
+        )}
+      </div>
+    </motion.div>
   );
 }
-

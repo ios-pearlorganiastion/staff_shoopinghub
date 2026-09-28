@@ -10,11 +10,35 @@ import {
   LockKeyhole,
   CheckCircle2,
   Sparkles,
+  User,
+  Loader2,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { staffLogin } from "../api/authApis";
 import { saveSession } from "../utils/auth";
-import Button from "../components/ui/Button";
-import { Field, Input } from "../components/ui/Field";
+
+const pageVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.08 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 16 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.45, ease: "easeOut" },
+  },
+};
+
+const inputWrapClass =
+  "flex h-12 w-full items-center rounded-xl border border-[#dceacb] bg-[#f7f8f2] px-3 transition focus-within:border-[#315d32] focus-within:bg-white focus-within:shadow-[0_0_0_4px_rgba(49,93,50,0.08)]";
+
+const inputClass =
+  "h-full min-w-0 flex-1 bg-transparent px-2.5 text-sm font-semibold text-[#202a20] outline-none placeholder:font-normal placeholder:text-[#92998e] disabled:opacity-60";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -70,52 +94,92 @@ export default function Login() {
   };
 
   return (
-    <div className="relative flex min-h-[100svh] w-full items-center justify-center overflow-x-hidden overflow-y-auto bg-[#f4f8f5] px-3 py-4 sm:px-5 sm:py-6 md:px-6">
-      <div className="pointer-events-none absolute -left-24 -top-24 h-48 w-48 rounded-full bg-brand-200/25 blur-3xl sm:h-60 sm:w-60" />
-      <div className="pointer-events-none absolute -bottom-24 -right-24 h-52 w-52 rounded-full bg-brand-300/20 blur-3xl sm:h-64 sm:w-64" />
+    <div className="relative flex min-h-[100svh] w-full items-center justify-center overflow-x-hidden overflow-y-auto bg-[#f7f8f2] px-3 py-4 sm:px-5 sm:py-8">
+      {/* Page background blobs */}
+      <motion.div
+        animate={{ scale: [1, 1.1, 1], opacity: [0.35, 0.55, 0.35] }}
+        transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+        className="pointer-events-none absolute -left-24 -top-24 h-64 w-64 rounded-full bg-[#b8df7d]/40 blur-3xl sm:h-80 sm:w-80"
+      />
 
-      <div className="relative my-auto w-full max-w-[1000px]">
-        <div className="grid w-full overflow-hidden rounded-[20px] border border-[#dce9df] bg-white shadow-[0_15px_50px_rgba(18,77,42,0.10)] sm:rounded-[24px] lg:grid-cols-[0.92fr_1.08fr]">
+      <motion.div
+        animate={{ x: [0, -20, 0], y: [0, 15, 0] }}
+        transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
+        className="pointer-events-none absolute -bottom-28 -right-24 h-72 w-72 rounded-full bg-[#315d32]/15 blur-3xl sm:h-96 sm:w-96"
+      />
 
-          <div className="relative hidden min-h-[590px] overflow-hidden bg-gradient-to-br from-brand-800 via-brand-700 to-brand-600 p-8 lg:flex lg:flex-col xl:p-10">
-            <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full border-[42px] border-white/[0.04]" />
-            <div className="absolute -bottom-24 -left-20 h-64 w-64 rounded-full border-[48px] border-white/[0.04]" />
-            <div className="absolute right-10 top-1/3 h-24 w-24 rounded-full bg-brand-300/10 blur-2xl" />
+      <motion.div
+        variants={pageVariants}
+        initial="hidden"
+        animate="show"
+        className="relative my-auto w-full max-w-[1020px]"
+      >
+        <motion.div
+          variants={itemVariants}
+          className="grid w-full overflow-hidden rounded-[22px] border border-[#dceacb] bg-white shadow-[0_25px_80px_rgba(49,93,50,0.15)] sm:rounded-[30px] lg:grid-cols-[1fr_1fr]"
+        >
+          {/* ================= LEFT PANEL (desktop) ================= */}
+          <div className="relative hidden min-h-[620px] overflow-hidden bg-[#315d32] p-8 text-white lg:flex lg:flex-col xl:p-11">
+            <motion.div
+              animate={{ scale: [1, 1.08, 1], opacity: [0.18, 0.3, 0.18] }}
+              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute -right-24 -top-28 h-80 w-80 rounded-full bg-[#b8df7d]/25 blur-2xl"
+            />
 
+            <motion.div
+              animate={{ x: [0, 22, 0], y: [0, -12, 0] }}
+              transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute -bottom-32 -left-16 h-72 w-72 rounded-full bg-white/10 blur-3xl"
+            />
+
+            <motion.div
+              animate={{ x: [0, -14, 0], y: [0, 10, 0] }}
+              transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute right-[18%] top-[42%] h-28 w-28 rounded-full bg-[#b8df7d]/15 blur-2xl"
+            />
+
+            {/* Brand */}
             <div className="relative z-10 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-md">
-                <ShoppingBag className="h-[18px] w-[18px] text-brand-700" />
-              </div>
+              <motion.div
+                whileHover={{ scale: 1.08, rotate: 4 }}
+                className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-[#315d32] shadow-lg"
+              >
+                <ShoppingBag className="h-5 w-5" />
+              </motion.div>
 
               <div>
-                <h2 className="text-base font-extrabold text-white">
+                <h2 className="text-base font-black tracking-tight">
                   CD Shopping Hub
                 </h2>
-                <p className="mt-0.5 text-[8px] font-bold uppercase tracking-[0.18em] text-brand-100/70">
+
+                <p className="mt-0.5 text-[9px] font-bold uppercase tracking-[0.18em] text-white/60">
                   Admin Panel
                 </p>
               </div>
             </div>
 
+            {/* Hero copy */}
             <div className="relative z-10 my-auto py-8">
-              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-[9px] font-bold uppercase tracking-wide text-white backdrop-blur-sm">
-                <Sparkles className="h-3 w-3 text-brand-200" />
+              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider text-white backdrop-blur">
+                <motion.span
+                  animate={{ scale: [1, 1.35, 1], opacity: [0.7, 1, 0.7] }}
+                  transition={{ duration: 1.8, repeat: Infinity }}
+                  className="h-1.5 w-1.5 rounded-full bg-[#b8df7d]"
+                />
                 Store management
               </div>
 
-              <h1 className="max-w-[420px] text-3xl font-extrabold leading-[1.1] tracking-tight text-white xl:text-[40px]">
-                Everything your store needs,
-                <span className="block text-brand-200">
-                  in one place.
-                </span>
+              <h1 className="max-w-[420px] text-3xl font-black leading-[1.12] tracking-tight xl:text-[40px]">
+                Everything your store needs,{" "}
+                <span className="text-[#b8df7d]">in one place.</span>
               </h1>
 
-              <p className="mt-4 max-w-[360px] text-xs leading-5 text-brand-50/70">
+              <p className="mt-4 max-w-[380px] text-xs leading-5 text-white/70 xl:text-sm xl:leading-6">
                 Manage products, orders, customers and store operations from
-                one powerful dashboard.
+                one beautiful dashboard.
               </p>
 
-              <div className="mt-7 grid max-w-[400px] grid-cols-2 gap-2.5">
+              <div className="mt-8 grid max-w-[420px] grid-cols-2 gap-2.5">
                 <FeatureCard
                   icon={ShoppingBag}
                   title="Orders"
@@ -142,176 +206,257 @@ export default function Login() {
               </div>
             </div>
 
+            {/* Footer */}
             <div className="relative z-10 flex items-center justify-between border-t border-white/10 pt-4">
-              <p className="text-[9px] text-white/40">
+              <p className="text-[10px] text-white/50">
                 © 2026 CD Shopping Hub
               </p>
 
-              <div className="flex items-center gap-1.5 text-[9px] font-semibold text-white/50">
-                <ShieldCheck className="h-3 w-3" />
+              <div className="flex items-center gap-1.5 text-[10px] font-semibold text-white/60">
+                <ShieldCheck className="h-3.5 w-3.5" />
                 Secure access
               </div>
             </div>
           </div>
 
-          <div className="flex min-h-[560px] w-full items-center justify-center px-4 py-7 sm:min-h-[590px] sm:px-8 sm:py-9 md:px-10 lg:px-10 xl:px-12">
-            <div className="w-full max-w-[360px]">
+          {/* ================= RIGHT PANEL (form) ================= */}
+          <div className="flex w-full flex-col">
+            {/* Mobile / tablet brand banner */}
+            <div className="relative overflow-hidden bg-[#315d32] px-4 py-4 text-white sm:px-8 sm:py-5 lg:hidden">
+              <motion.div
+                animate={{ scale: [1, 1.1, 1], opacity: [0.18, 0.3, 0.18] }}
+                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute -right-16 -top-20 h-48 w-48 rounded-full bg-[#b8df7d]/25 blur-2xl"
+              />
 
-              <div className="mb-6 flex items-center gap-3 lg:hidden">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-700 shadow-md shadow-brand-700/20">
-                  <ShoppingBag className="h-[18px] w-[18px] text-white" />
+              <motion.div
+                animate={{ x: [0, 15, 0], y: [0, -8, 0] }}
+                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute -bottom-20 left-1/3 h-40 w-40 rounded-full bg-white/10 blur-2xl"
+              />
+
+              <div className="relative flex items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-[#315d32] shadow-md sm:h-11 sm:w-11">
+                  <ShoppingBag className="h-[18px] w-[18px]" />
                 </div>
 
                 <div className="min-w-0">
-                  <h2 className="truncate text-sm font-extrabold text-ink">
+                  <h2 className="truncate text-sm font-black tracking-tight sm:text-base">
                     CD Shopping Hub
                   </h2>
 
-                  <p className="mt-0.5 text-[8px] font-bold uppercase tracking-[0.16em] text-ink-faint">
+                  <p className="mt-0.5 text-[8px] font-bold uppercase tracking-[0.18em] text-white/60 sm:text-[9px]">
                     Admin Panel
                   </p>
                 </div>
-              </div>
 
-              <div className="mb-6">
-                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-700 sm:h-12 sm:w-12">
-                  <LockKeyhole className="h-5 w-5" />
+                <div className="ml-auto hidden items-center gap-1.5 rounded-full border border-white/10 bg-white/10 px-2.5 py-1 text-[9px] font-bold text-white/80 sm:flex">
+                  <Sparkles className="h-3 w-3 text-[#b8df7d]" />
+                  Store management
                 </div>
-
-                <p className="mb-1.5 text-[9px] font-extrabold uppercase tracking-[0.2em] text-brand-600">
-                  Welcome back
-                </p>
-
-                <h1 className="text-[24px] font-extrabold leading-tight tracking-tight text-ink sm:text-[28px]">
-                  Sign in to your account
-                </h1>
-
-                <p className="mt-2 max-w-[330px] text-xs leading-5 text-ink-soft sm:text-sm">
-                  Enter your credentials to continue to the admin dashboard.
-                </p>
               </div>
+            </div>
 
-              {error && (
-                <div className="mb-4 flex w-full items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50 px-3 py-3 text-[10px] font-semibold leading-4 text-rose-600 sm:px-3.5 sm:text-[11px]">
-                  <div className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-rose-500" />
-                  <span className="break-words">{error}</span>
-                </div>
-              )}
-
-              <form
-                onSubmit={handleSubmit}
-                autoComplete="off"
-                spellCheck={false}
-                className="w-full"
+            <div className="flex flex-1 items-center justify-center px-4 py-7 sm:px-10 sm:py-10 xl:px-14">
+              <motion.div
+                variants={pageVariants}
+                initial="hidden"
+                animate="show"
+                className="w-full max-w-[380px]"
               >
-                <Field label="Username">
-                  <Input
-                    autoComplete="off"
-                    value={username}
-                    onChange={clearErrorOnChange(setUsername)}
-                    disabled={loading}
-                    placeholder="Enter your username"
-                    className="h-11 w-full rounded-xl border-[#dce9df] bg-[#fbfdfb] text-sm transition focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10"
-                  />
-                </Field>
+                <motion.div variants={itemVariants} className="mb-6">
+                  <motion.div
+                    whileHover={{ rotate: 6, scale: 1.06 }}
+                    className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#eef5e7] text-[#315d32]"
+                  >
+                    <LockKeyhole className="h-5 w-5" />
+                  </motion.div>
 
-                <Field label="Password">
-                  <div className="relative w-full">
-                    <Input
-                      type={showPassword ? "text" : "password"}
-                      autoComplete="new-password"
-                      value={password}
-                      onChange={clearErrorOnChange(setPassword)}
-                      disabled={loading}
-                      placeholder="Enter your password"
-                      className="h-11 w-full rounded-xl border-[#dce9df] bg-[#fbfdfb] pr-11 text-sm transition focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10"
+                  <div className="mb-1.5 flex items-center gap-2">
+                    <motion.span
+                      animate={{ scale: [1, 1.35, 1], opacity: [0.7, 1, 0.7] }}
+                      transition={{ duration: 1.8, repeat: Infinity }}
+                      className="h-1.5 w-1.5 rounded-full bg-[#315d32]"
                     />
 
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword((prev) => !prev)}
-                      disabled={loading}
-                      aria-label={
-                        showPassword ? "Hide password" : "Show password"
-                      }
-                      className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-ink-faint transition hover:bg-brand-50 hover:text-brand-700 disabled:opacity-50"
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </button>
+                    <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#92998e]">
+                      Welcome back
+                    </span>
                   </div>
-                </Field>
 
-                <Button
-                  type="submit"
-                  loading={loading}
-                  icon={loading ? undefined : ArrowRight}
-                  className="mt-3 h-11 w-full rounded-xl bg-brand-700 text-xs font-bold shadow-lg shadow-brand-700/15 transition-all duration-300 hover:-translate-y-0.5 hover:bg-brand-800 hover:shadow-brand-700/25 sm:text-sm"
-                  size="lg"
+                  <h1 className="text-[24px] font-black leading-tight tracking-tight text-[#202a20] sm:text-[28px]">
+                    Sign in to your account
+                  </h1>
+
+                  <p className="mt-2 text-xs leading-5 text-[#92998e] sm:text-sm sm:leading-6">
+                    Enter your credentials to continue to the admin dashboard.
+                  </p>
+                </motion.div>
+
+                <AnimatePresence>
+                  {error && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8, height: 0 }}
+                      animate={{ opacity: 1, y: 0, height: "auto" }}
+                      exit={{ opacity: 0, y: -8, height: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="mb-4 flex w-full items-start gap-2.5 rounded-xl border border-[#efd3d0] bg-[#f8ecea] px-3 py-3 text-[11px] font-semibold leading-4 text-[#b35a54] sm:text-xs">
+                        <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-[#b35a54]" />
+                        <span className="min-w-0 break-words">{error}</span>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <motion.form
+                  variants={itemVariants}
+                  onSubmit={handleSubmit}
+                  autoComplete="off"
+                  spellCheck={false}
+                  className="w-full space-y-4"
                 >
-                  {loading ? "Signing in..." : "Sign in to dashboard"}
-                </Button>
-              </form>
+                  <div>
+                    <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-[#667065]">
+                      Username
+                    </label>
 
-              <div className="my-5 flex w-full items-center gap-2.5">
-                <div className="h-px flex-1 bg-line" />
+                    <div className={inputWrapClass}>
+                      <User className="h-4 w-4 shrink-0 text-[#92998e]" />
 
-                <span className="shrink-0 text-[7px] font-bold uppercase tracking-wider text-ink-faint sm:text-[8px]">
-                  Secure login
-                </span>
+                      <input
+                        autoComplete="off"
+                        value={username}
+                        onChange={clearErrorOnChange(setUsername)}
+                        disabled={loading}
+                        placeholder="Enter your username"
+                        className={inputClass}
+                      />
+                    </div>
+                  </div>
 
-                <div className="h-px flex-1 bg-line" />
-              </div>
+                  <div>
+                    <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-[#667065]">
+                      Password
+                    </label>
 
-              <div className="flex w-full items-start gap-2.5 rounded-xl border border-brand-100 bg-brand-50/60 p-3 sm:p-3.5">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-brand-600 shadow-sm">
-                  <ShieldCheck className="h-3.5 w-3.5" />
-                </div>
+                    <div className={inputWrapClass}>
+                      <LockKeyhole className="h-4 w-4 shrink-0 text-[#92998e]" />
 
-                <div className="min-w-0">
-                  <p className="text-[10px] font-extrabold text-ink sm:text-[11px]">
-                    Your account is protected
-                  </p>
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        autoComplete="new-password"
+                        value={password}
+                        onChange={clearErrorOnChange(setPassword)}
+                        disabled={loading}
+                        placeholder="Enter your password"
+                        className={inputClass}
+                      />
 
-                  <p className="mt-0.5 text-[8px] leading-4 text-ink-faint sm:text-[9px]">
-                    Secure authentication keeps your account and store data
-                    protected.
-                  </p>
-                </div>
-              </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((prev) => !prev)}
+                        disabled={loading}
+                        aria-label={
+                          showPassword ? "Hide password" : "Show password"
+                        }
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#92998e] transition hover:bg-[#eef5e7] hover:text-[#315d32] disabled:opacity-50"
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
 
-              <p className="mt-5 text-center text-[8px] font-medium text-ink-faint sm:text-[9px]">
-                Authorized staff access only
-              </p>
+                  <motion.button
+                    whileHover={loading ? undefined : { y: -2 }}
+                    whileTap={loading ? undefined : { scale: 0.98 }}
+                    type="submit"
+                    disabled={loading}
+                    className="group mt-1 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#315d32] px-5 text-xs font-bold text-white shadow-[0_12px_28px_rgba(49,93,50,0.25)] transition hover:bg-[#274d29] disabled:cursor-not-allowed disabled:opacity-70 sm:text-sm"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Signing in...
+                      </>
+                    ) : (
+                      <>
+                        Sign in to dashboard
+                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                      </>
+                    )}
+                  </motion.button>
+                </motion.form>
+
+                <motion.div
+                  variants={itemVariants}
+                  className="my-5 flex w-full items-center gap-2.5"
+                >
+                  <div className="h-px flex-1 bg-[#edf1e9]" />
+
+                  <span className="shrink-0 text-[8px] font-bold uppercase tracking-[0.16em] text-[#92998e]">
+                    Secure login
+                  </span>
+
+                  <div className="h-px flex-1 bg-[#edf1e9]" />
+                </motion.div>
+
+                <motion.div
+                  variants={itemVariants}
+                  className="flex w-full items-start gap-2.5 rounded-xl border border-[#dceacb] bg-[#eef5e7]/60 p-3 sm:p-3.5"
+                >
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-[#315d32] shadow-sm">
+                    <ShieldCheck className="h-4 w-4" />
+                  </div>
+
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-black text-[#202a20] sm:text-xs">
+                      Your account is protected
+                    </p>
+
+                    <p className="mt-0.5 text-[9px] leading-4 text-[#92998e] sm:text-[10px]">
+                      Secure authentication keeps your account and store data
+                      protected.
+                    </p>
+                  </div>
+                </motion.div>
+
+                <motion.p
+                  variants={itemVariants}
+                  className="mt-5 text-center text-[9px] font-medium text-[#92998e]"
+                >
+                  Authorized staff access only
+                </motion.p>
+              </motion.div>
             </div>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 }
 
 function FeatureCard({ icon: Icon, title, text }) {
   return (
-    <div className="group rounded-xl border border-white/10 bg-white/[0.07] p-2.5 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/[0.11]">
+    <motion.div
+      whileHover={{ y: -3 }}
+      className="group rounded-xl border border-white/10 bg-white/[0.08] p-3 backdrop-blur transition-colors duration-300 hover:bg-white/[0.14]"
+    >
       <div className="flex items-center gap-2.5">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/10 text-brand-100">
-          <Icon className="h-3.5 w-3.5" />
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/10 text-[#b8df7d] transition-all duration-300 group-hover:bg-[#b8df7d] group-hover:text-[#315d32]">
+          <Icon className="h-4 w-4" />
         </div>
 
         <div className="min-w-0">
-          <p className="text-[10px] font-extrabold text-white">
-            {title}
-          </p>
+          <p className="text-[11px] font-black text-white">{title}</p>
 
-          <p className="mt-0.5 truncate text-[8px] text-white/45">
-            {text}
-          </p>
+          <p className="mt-0.5 truncate text-[9px] text-white/55">{text}</p>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
