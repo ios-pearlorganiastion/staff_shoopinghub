@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useCallback, useEffect, useState } from "react";
 import {
   RefreshCw,
   ShoppingBag,
@@ -12,83 +13,11 @@ import {
   Clock3,
   Truck,
   XCircle,
+  AlertCircle,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
-const ordersData = [
-  {
-    id: 1,
-    number: "CD-10021",
-    customer: "Rahul Sharma",
-    items: 3,
-    amount: 1299,
-    status: "PENDING_PAYMENT",
-    date: "01 Sep 2026, 10:30 AM",
-    phone: "+91 9876543210",
-    address: "Rajpur Road, Dehradun, Uttarakhand",
-    payment: "Online",
-  },
-  {
-    id: 2,
-    number: "CD-10020",
-    customer: "Ankit Rawat",
-    items: 2,
-    amount: 849,
-    status: "CONFIRMED",
-    date: "01 Sep 2026, 09:45 AM",
-    phone: "+91 9876543211",
-    address: "Clock Tower, Dehradun, Uttarakhand",
-    payment: "Online",
-  },
-  {
-    id: 3,
-    number: "CD-10019",
-    customer: "Neha Singh",
-    items: 4,
-    amount: 2199,
-    status: "PACKED",
-    date: "31 Aug 2026, 06:20 PM",
-    phone: "+91 9876543212",
-    address: "Jakhan, Dehradun, Uttarakhand",
-    payment: "COD",
-  },
-  {
-    id: 4,
-    number: "CD-10018",
-    customer: "Amit Kumar",
-    items: 1,
-    amount: 499,
-    status: "READY",
-    date: "31 Aug 2026, 04:10 PM",
-    phone: "+91 9876543213",
-    address: "Vasant Vihar, Dehradun",
-    payment: "Online",
-  },
-  {
-    id: 5,
-    number: "CD-10017",
-    customer: "Priya Joshi",
-    items: 5,
-    amount: 2899,
-    status: "COMPLETED",
-    date: "30 Aug 2026, 02:15 PM",
-    phone: "+91 9876543214",
-    address: "Clement Town, Dehradun",
-    payment: "Online",
-  },
-  {
-    id: 6,
-    number: "CD-10016",
-    customer: "Vikas Negi",
-    items: 2,
-    amount: 799,
-    status: "CANCELLED",
-    date: "30 Aug 2026, 11:30 AM",
-    phone: "+91 9876543215",
-    address: "Prem Nagar, Dehradun",
-    payment: "COD",
-  },
-];
+import { getOrders } from "../api/order.api";
 
 const STATUSES = [
   ["", "All"],
@@ -152,6 +81,80 @@ const itemVariants = {
   },
 };
 
+function getCustomerName(order) {
+  return (
+    order?.customer?.name ||
+    order?.customerName ||
+    "Customer"
+  );
+}
+
+function getCustomerPhone(order) {
+  return (
+    order?.customer?.phone ||
+    order?.phone ||
+    "—"
+  );
+}
+
+function getOrderAddress(order) {
+  const parts = [
+    order?.deliveryLabel,
+    order?.deliveryLine1,
+    order?.deliveryLine2,
+    order?.deliveryCity,
+    order?.deliveryState,
+    order?.deliveryPincode,
+  ].filter(Boolean);
+
+  if (parts.length > 0) {
+    return parts.join(", ");
+  }
+
+  if (order?.fulfillmentMethod === "PICKUP") {
+    return "Pickup order";
+  }
+
+  return "Address not available";
+}
+
+function formatDate(dateString) {
+  if (!dateString) {
+    return "—";
+  }
+
+  const date = new Date(dateString);
+
+  if (Number.isNaN(date.getTime())) {
+    return dateString;
+  }
+
+  return date.toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function getPaymentLabel(paymentMethod) {
+  if (!paymentMethod) {
+    return "—";
+  }
+
+  const paymentMap = {
+    CASH: "Cash",
+    COD: "COD",
+    ONLINE: "Online",
+    UPI: "UPI",
+    CARD: "Card",
+    RAZORPAY: "Online",
+  };
+
+  return paymentMap[paymentMethod] || paymentMethod;
+}
+
 function StatusBadge({ status }) {
   const Icon = STATUS_ICON[status] || Clock3;
 
@@ -161,20 +164,41 @@ function StatusBadge({ status }) {
         scale: 1.05,
         y: -1,
       }}
-      className={`inline-flex max-w-full min-h-6 shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-full px-2 py-1 text-[7px] font-black sm:min-h-7 sm:gap-1.5 sm:px-2.5 sm:text-[9px] ${STATUS_STYLE[status]}`}
+      className={`inline-flex max-w-full min-h-6 shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-full px-2 py-1 text-[7px] font-black sm:min-h-7 sm:gap-1.5 sm:px-2.5 sm:text-[9px] ${
+        STATUS_STYLE[status] ||
+        "bg-[#f7f8f2] text-[#667065]"
+      }`}
     >
       <Icon className="h-2.5 w-2.5 shrink-0 sm:h-3 sm:w-3" />
-      <span className="truncate">{STATUS_LABEL[status]}</span>
+      <span className="truncate">
+        {STATUS_LABEL[status] || status || "Unknown"}
+      </span>
     </motion.span>
   );
 }
 
-function OrderDetailsModal({ order, onClose, onAction }) {
-  const items = [
-    { name: "Organic Rice", qty: 2, price: 500 },
-    { name: "Premium Atta", qty: 1, price: 299 },
-    { name: "Cooking Oil", qty: 1, price: 500 },
-  ];
+function OrderDetailsModal({
+  order,
+  onClose,
+  onAction,
+}) {
+  const items = Array.isArray(order?.items)
+    ? order.items
+    : [];
+
+  const total = Number(
+    order?.total ??
+      order?.subtotal ??
+      0
+  );
+
+  const subtotal = Number(
+    order?.subtotal ?? 0
+  );
+
+  const deliveryFee = Number(
+    order?.deliveryFee ?? 0
+  );
 
   return (
     <motion.div
@@ -233,11 +257,11 @@ function OrderDetailsModal({ order, onClose, onAction }) {
               </p>
 
               <h3 className="mt-1 truncate text-lg font-black tracking-tight sm:text-2xl">
-                {order.number}
+                #{order.orderNumber}
               </h3>
 
               <p className="mt-1 text-[9px] text-white/70 sm:text-xs">
-                {order.date}
+                {formatDate(order.createdAt)}
               </p>
             </div>
 
@@ -263,7 +287,7 @@ function OrderDetailsModal({ order, onClose, onAction }) {
               </p>
 
               <p className="mt-0.5 truncate text-[11px] font-bold sm:text-sm">
-                {order.customer}
+                {getCustomerName(order)}
               </p>
             </div>
 
@@ -274,26 +298,39 @@ function OrderDetailsModal({ order, onClose, onAction }) {
         <div className="min-h-0 flex-1 overflow-y-auto p-2.5 sm:p-5">
           <div className="grid grid-cols-2 gap-2 sm:gap-3">
             <div className="rounded-xl border border-[#dceacb] bg-[#f7f8f2] p-2.5 sm:p-3">
-              <Package size={16} className="text-[#315d32]" />
+              <Package
+                size={16}
+                className="text-[#315d32]"
+              />
 
               <p className="mt-2 text-[8px] font-bold uppercase tracking-wider text-[#92998e]">
                 Items
               </p>
 
               <p className="mt-1 text-base font-black text-[#202a20]">
-                {order.items}
+                {items.reduce(
+                  (sum, item) =>
+                    sum +
+                    Number(item.quantity || 0),
+                  0
+                )}
               </p>
             </div>
 
             <div className="rounded-xl border border-[#dceacb] bg-[#f7f8f2] p-2.5 sm:p-3">
-              <CreditCard size={16} className="text-[#315d32]" />
+              <CreditCard
+                size={16}
+                className="text-[#315d32]"
+              />
 
               <p className="mt-2 text-[8px] font-bold uppercase tracking-wider text-[#92998e]">
                 Payment
               </p>
 
-              <p className="mt-1 text-base font-black text-[#202a20]">
-                {order.payment}
+              <p className="mt-1 truncate text-base font-black text-[#202a20]">
+                {getPaymentLabel(
+                  order.paymentMethod
+                )}
               </p>
             </div>
           </div>
@@ -306,12 +343,40 @@ function OrderDetailsModal({ order, onClose, onAction }) {
                 </p>
 
                 <p className="mt-1 text-lg font-black text-[#202a20] sm:text-2xl">
-                  ₹{order.amount.toLocaleString()}
+                  ₹{total.toLocaleString("en-IN")}
                 </p>
               </div>
 
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white text-[#315d32] shadow-sm sm:h-10 sm:w-10">
                 <CreditCard size={16} />
+              </div>
+            </div>
+
+            <div className="mt-3 grid grid-cols-2 gap-2 border-t border-[#dceacb] pt-3">
+              <div>
+                <p className="text-[8px] font-bold uppercase text-[#92998e]">
+                  Subtotal
+                </p>
+
+                <p className="mt-1 text-xs font-bold text-[#202a20]">
+                  ₹
+                  {subtotal.toLocaleString(
+                    "en-IN"
+                  )}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-[8px] font-bold uppercase text-[#92998e]">
+                  Delivery
+                </p>
+
+                <p className="mt-1 text-xs font-bold text-[#202a20]">
+                  ₹
+                  {deliveryFee.toLocaleString(
+                    "en-IN"
+                  )}
+                </p>
               </div>
             </div>
           </div>
@@ -328,7 +393,7 @@ function OrderDetailsModal({ order, onClose, onAction }) {
                 </p>
 
                 <p className="mt-0.5 break-all text-[11px] font-semibold text-[#202a20] sm:text-sm">
-                  {order.phone}
+                  {getCustomerPhone(order)}
                 </p>
               </div>
             </div>
@@ -344,7 +409,7 @@ function OrderDetailsModal({ order, onClose, onAction }) {
                 </p>
 
                 <p className="mt-0.5 text-[11px] font-semibold leading-5 text-[#202a20] sm:text-sm">
-                  {order.address}
+                  {getOrderAddress(order)}
                 </p>
               </div>
             </div>
@@ -358,56 +423,107 @@ function OrderDetailsModal({ order, onClose, onAction }) {
                 </p>
 
                 <p className="mt-0.5 text-[11px] font-black text-[#202a20]">
-                  {items.length} products
+                  {items.length}{" "}
+                  {items.length === 1
+                    ? "product"
+                    : "products"}
                 </p>
               </div>
 
               <Package className="h-4 w-4 text-[#315d32]" />
             </div>
 
-            <div className="space-y-1.5 sm:space-y-2">
-              {items.map((item) => (
-                <div
-                  key={item.name}
-                  className="flex items-center justify-between gap-2 rounded-lg bg-white px-2.5 py-2.5"
-                >
-                  <div className="min-w-0">
-                    <p className="truncate text-[10px] font-bold text-[#202a20]">
-                      {item.name}
-                    </p>
+            {items.length === 0 ? (
+              <p className="rounded-lg bg-white p-3 text-center text-xs text-[#92998e]">
+                No item details available
+              </p>
+            ) : (
+              <div className="space-y-1.5 sm:space-y-2">
+                {items.map((item, index) => (
+                  <div
+                    key={
+                      item.id ||
+                      item.productId ||
+                      index
+                    }
+                    className="flex items-center justify-between gap-2 rounded-lg bg-white px-2.5 py-2.5"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-[10px] font-bold text-[#202a20]">
+                        {item.productName ||
+                          item.product?.name ||
+                          "Product"}
+                      </p>
 
-                    <p className="mt-0.5 text-[8px] text-[#92998e]">
-                      Qty: {item.qty}
-                    </p>
+                      <p className="mt-0.5 text-[8px] text-[#92998e]">
+                        Qty: {item.quantity || 0}
+                        {item.unit
+                          ? ` • ${item.unit}`
+                          : ""}
+                        {item.weight
+                          ? ` • ${item.weight}`
+                          : ""}
+                      </p>
+
+                      {item.sku && (
+                        <p className="mt-0.5 truncate text-[7px] text-[#92998e]">
+                          SKU: {item.sku}
+                        </p>
+                      )}
+                    </div>
+
+                    <span className="shrink-0 text-[10px] font-black text-[#315d32]">
+                      ₹
+                      {Number(
+                        item.lineTotal ??
+                          Number(
+                            item.unitPrice || 0
+                          ) *
+                            Number(
+                              item.quantity || 0
+                            )
+                      ).toLocaleString("en-IN")}
+                    </span>
                   </div>
-
-                  <span className="shrink-0 text-[10px] font-black text-[#315d32]">
-                    ₹{item.price.toLocaleString()}
-                  </span>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
+
+          {order.fulfillmentMethod && (
+            <div className="mt-2.5 rounded-xl border border-[#dceacb] bg-white p-3 sm:mt-3">
+              <p className="text-[8px] font-bold uppercase tracking-wider text-[#92998e]">
+                Fulfillment
+              </p>
+
+              <p className="mt-1 text-xs font-black text-[#315d32]">
+                {order.fulfillmentMethod}
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="shrink-0 border-t border-[#edf1e9] bg-white p-2.5 sm:px-5 sm:py-3.5">
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <motion.button
-              whileTap={{
-                scale: 0.97,
-              }}
+              whileTap={{ scale: 0.97 }}
               onClick={onClose}
               className="h-10 w-full rounded-xl border border-[#dceacb] px-5 text-xs font-bold text-[#667065] transition hover:bg-[#f7f8f2] sm:w-auto"
             >
               Close
             </motion.button>
 
-            {!["COMPLETED", "CANCELLED"].includes(order.status) && (
+            {![
+              "COMPLETED",
+              "CANCELLED",
+            ].includes(order.status) && (
               <motion.button
-                whileTap={{
-                  scale: 0.97,
-                }}
-                onClick={() => onAction("Order updated successfully")}
+                whileTap={{ scale: 0.97 }}
+                onClick={() =>
+                  onAction(
+                    "Order updated successfully"
+                  )
+                }
                 className="h-10 w-full rounded-xl bg-[#315d32] px-5 text-xs font-bold text-white shadow-[0_8px_20px_rgba(49,93,50,0.2)] transition hover:bg-[#274d29] sm:w-auto"
               >
                 Update Order
@@ -422,29 +538,115 @@ function OrderDetailsModal({ order, onClose, onAction }) {
 
 export default function Orders() {
   const [filter, setFilter] = useState("");
-  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [orders, setOrders] = useState([]);
+  const [selectedOrder, setSelectedOrder] =
+    useState(null);
   const [toast, setToast] = useState("");
-  const [refreshing, setRefreshing] = useState(false);
+  const [refreshing, setRefreshing] =
+    useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const orders = filter
-    ? ordersData.filter((order) => order.status === filter)
-    : ordersData;
+  const [meta, setMeta] = useState({
+    total: 0,
+    page: 1,
+    limit: 20,
+    totalPages: 1,
+  });
 
-  const showToast = (message) => {
+  const showToast = useCallback((message) => {
     setToast(message);
 
     setTimeout(() => {
       setToast("");
     }, 2200);
-  };
+  }, []);
+
+  const fetchOrders = useCallback(
+    async (
+      status = filter,
+      isRefresh = false
+    ) => {
+      try {
+        if (isRefresh) {
+          setRefreshing(true);
+        } else {
+          setLoading(true);
+        }
+
+        setError("");
+
+        const result = await getOrders({
+          page: 1,
+          limit: 20,
+          status,
+        });
+
+        const items = Array.isArray(
+          result?.data?.items
+        )
+          ? result.data.items
+          : [];
+
+        const responseMeta =
+          result?.data?.meta;
+
+        setOrders(items);
+
+        if (responseMeta) {
+          setMeta({
+            total: Number(
+              responseMeta.total ??
+                items.length
+            ),
+            page: Number(
+              responseMeta.page ?? 1
+            ),
+            limit: Number(
+              responseMeta.limit ?? 20
+            ),
+            totalPages: Number(
+              responseMeta.totalPages ?? 1
+            ),
+          });
+        } else {
+          setMeta({
+            total: items.length,
+            page: 1,
+            limit: 20,
+            totalPages: 1,
+          });
+        }
+
+        if (isRefresh) {
+          showToast("Orders refreshed");
+        }
+      } catch (err) {
+        console.error(
+          "Orders API Error:",
+          err
+        );
+
+        setOrders([]);
+
+        setError(
+          err?.message ||
+            "Unable to load orders. Please try again."
+        );
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [filter, showToast]
+  );
+
+  useEffect(() => {
+    fetchOrders(filter);
+  }, [filter, fetchOrders]);
 
   const handleRefresh = () => {
-    setRefreshing(true);
-
-    setTimeout(() => {
-      setRefreshing(false);
-      showToast("Orders refreshed");
-    }, 800);
+    fetchOrders(filter, true);
   };
 
   return (
@@ -540,7 +742,8 @@ export default function Orders() {
                   </h1>
 
                   <p className="mt-1 max-w-xl text-[9px] leading-4 text-white/70 sm:mt-1.5 sm:text-sm sm:leading-5">
-                    Track, manage and fulfill customer orders from one
+                    Track, manage and fulfill
+                    customer orders from one
                     beautiful workspace.
                   </p>
                 </div>
@@ -551,11 +754,14 @@ export default function Orders() {
                   scale: 0.96,
                 }}
                 onClick={handleRefresh}
-                className="inline-flex min-h-9 w-full items-center justify-center gap-2 rounded-xl bg-white px-4 text-[9px] font-bold text-[#315d32] shadow-lg transition-all sm:min-h-10 sm:w-auto sm:text-xs"
+                disabled={refreshing}
+                className="inline-flex min-h-9 w-full items-center justify-center gap-2 rounded-xl bg-white px-4 text-[9px] font-bold text-[#315d32] shadow-lg transition-all disabled:cursor-not-allowed disabled:opacity-70 sm:min-h-10 sm:w-auto sm:text-xs"
               >
                 <RefreshCw
                   className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${
-                    refreshing ? "animate-spin" : ""
+                    refreshing
+                      ? "animate-spin"
+                      : ""
                   }`}
                 />
                 Refresh Orders
@@ -575,26 +781,30 @@ export default function Orders() {
           </div>
 
           <div className="flex gap-1.5 overflow-x-auto p-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:gap-2 sm:p-3">
-            {STATUSES.map(([value, label]) => {
-              const active = filter === value;
+            {STATUSES.map(
+              ([value, label]) => {
+                const active = filter === value;
 
-              return (
-                <motion.button
-                  key={value}
-                  whileTap={{
-                    scale: 0.96,
-                  }}
-                  onClick={() => setFilter(value)}
-                  className={`shrink-0 rounded-xl px-3 py-2 text-[8px] font-bold transition-all sm:px-3.5 sm:text-xs ${
-                    active
-                      ? "bg-[#315d32] text-white shadow-[0_6px_18px_rgba(49,93,50,0.18)]"
-                      : "border border-[#dceacb] bg-white text-[#667065] hover:border-[#b8df7d] hover:bg-[#eef5e7] hover:text-[#315d32]"
-                  }`}
-                >
-                  {label}
-                </motion.button>
-              );
-            })}
+                return (
+                  <motion.button
+                    key={value}
+                    whileTap={{
+                      scale: 0.96,
+                    }}
+                    onClick={() =>
+                      setFilter(value)
+                    }
+                    className={`shrink-0 rounded-xl px-3 py-2 text-[8px] font-bold transition-all sm:px-3.5 sm:text-xs ${
+                      active
+                        ? "bg-[#315d32] text-white shadow-[0_6px_18px_rgba(49,93,50,0.18)]"
+                        : "border border-[#dceacb] bg-white text-[#667065] hover:border-[#b8df7d] hover:bg-[#eef5e7] hover:text-[#315d32]"
+                    }`}
+                  >
+                    {label}
+                  </motion.button>
+                );
+              }
+            )}
           </div>
         </motion.section>
 
@@ -605,23 +815,71 @@ export default function Orders() {
           <div>
             <h3 className="text-[13px] font-black tracking-tight text-[#202a20] sm:text-base">
               {filter
-                ? STATUSES.find(([value]) => value === filter)?.[1]
+                ? STATUSES.find(
+                    ([value]) =>
+                      value === filter
+                  )?.[1]
                 : "All Orders"}
             </h3>
 
             <p className="mt-0.5 text-[9px] text-[#92998e] sm:text-xs">
               Showing {orders.length}{" "}
-              {orders.length === 1 ? "order" : "orders"}
+              {orders.length === 1
+                ? "order"
+                : "orders"}
+              {meta.total > orders.length
+                ? ` of ${meta.total}`
+                : ""}
             </p>
           </div>
 
           <div className="hidden items-center gap-1.5 text-[10px] font-bold text-[#315d32] sm:flex sm:text-xs">
             <CheckCircle2 size={15} />
-            Updated
+            Live API
           </div>
         </motion.div>
 
-        {orders.length === 0 ? (
+        {loading ? (
+          <motion.div
+            variants={itemVariants}
+            className="rounded-[18px] border border-[#dceacb] bg-white px-4 py-14 text-center shadow-[0_8px_30px_rgba(49,93,50,0.06)] sm:py-20"
+          >
+            <RefreshCw className="mx-auto h-8 w-8 animate-spin text-[#315d32]" />
+
+            <h3 className="mt-4 text-base font-black text-[#202a20] sm:text-lg">
+              Loading orders
+            </h3>
+
+            <p className="mt-1 text-xs text-[#92998e] sm:text-sm">
+              Fetching the latest orders
+              from the server...
+            </p>
+          </motion.div>
+        ) : error ? (
+          <motion.div
+            variants={itemVariants}
+            className="rounded-[18px] border border-[#ead7d4] bg-white px-4 py-12 text-center shadow-[0_8px_30px_rgba(49,93,50,0.06)] sm:py-16"
+          >
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#f8ecea] text-[#b35a54]">
+              <AlertCircle size={25} />
+            </div>
+
+            <h3 className="mt-4 text-base font-black text-[#202a20] sm:text-lg">
+              Unable to load orders
+            </h3>
+
+            <p className="mx-auto mt-1 max-w-md text-xs leading-5 text-[#92998e] sm:text-sm">
+              {error}
+            </p>
+
+            <button
+              onClick={handleRefresh}
+              className="mt-4 rounded-xl bg-[#315d32] px-5 py-2.5 text-xs font-bold text-white transition hover:bg-[#274d29]"
+            >
+              Try Again
+            </button>
+          </motion.div>
+        ) : orders.length === 0 ? (
           <motion.div
             variants={itemVariants}
             className="rounded-[18px] border border-[#dceacb] bg-white px-4 py-10 text-center shadow-[0_8px_30px_rgba(49,93,50,0.06)] sm:py-14"
@@ -635,7 +893,8 @@ export default function Orders() {
             </h3>
 
             <p className="mx-auto mt-1 max-w-sm text-xs leading-5 text-[#92998e] sm:text-sm sm:leading-6">
-              There are no orders matching the selected status.
+              There are no orders matching
+              the selected status.
             </p>
           </motion.div>
         ) : (
@@ -643,166 +902,234 @@ export default function Orders() {
             variants={pageVariants}
             className="grid w-full min-w-0 grid-cols-1 gap-2 sm:gap-3"
           >
-            {orders.map((order) => (
-              <motion.div
-                key={order.id}
-                variants={itemVariants}
-                whileHover={{
-                  y: -3,
-                }}
-                whileTap={{
-                  scale: 0.99,
-                }}
-                onClick={() => setSelectedOrder(order)}
-                className="group relative w-full min-w-0 cursor-pointer overflow-hidden rounded-[16px] border border-[#dceacb] bg-white shadow-[0_8px_30px_rgba(49,93,50,0.05)] transition-all duration-300 hover:border-[#b8df7d] hover:shadow-[0_18px_45px_rgba(49,93,50,0.12)] sm:rounded-[22px]"
-              >
-                <div className="absolute bottom-0 left-0 top-0 w-1 bg-[#315d32] opacity-0 transition-opacity group-hover:opacity-100" />
+            {orders.map((order) => {
+              const amount = Number(
+                order.total ??
+                  order.subtotal ??
+                  order.items?.reduce(
+                    (sum, item) =>
+                      sum +
+                      Number(
+                        item.lineTotal ??
+                          Number(
+                            item.unitPrice || 0
+                          ) *
+                            Number(
+                              item.quantity ||
+                                0
+                            )
+                      ),
+                    0
+                  ) ??
+                  0
+              );
 
-                <div className="w-full min-w-0 p-3 sm:p-4 lg:p-5">
-                  <div className="flex w-full min-w-0 flex-col">
-                    <div className="flex w-full min-w-0 items-start gap-2.5 sm:gap-3">
-                      <motion.div
-                        whileHover={{
-                          rotate: 5,
-                          scale: 1.08,
-                        }}
-                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#eef5e7] text-[#315d32] transition-all duration-300 group-hover:bg-[#315d32] group-hover:text-white sm:h-11 sm:w-11"
-                      >
-                        <ShoppingBag size={16} />
-                      </motion.div>
+              const itemCount =
+                order.items?.reduce(
+                  (sum, item) =>
+                    sum +
+                    Number(
+                      item.quantity || 0
+                    ),
+                  0
+                ) || 0;
 
-                      <div className="min-w-0 flex-1 overflow-hidden">
-                        <div className="flex min-w-0 items-center gap-1.5">
-                          <h4 className="min-w-0 flex-1 truncate text-[11px] font-black text-[#202a20] sm:text-sm">
-                            #{order.number}
-                          </h4>
+              return (
+                <motion.div
+                  key={order.id}
+                  variants={itemVariants}
+                  whileHover={{
+                    y: -3,
+                  }}
+                  whileTap={{
+                    scale: 0.99,
+                  }}
+                  onClick={() =>
+                    setSelectedOrder(order)
+                  }
+                  className="group relative w-full min-w-0 cursor-pointer overflow-hidden rounded-[16px] border border-[#dceacb] bg-white shadow-[0_8px_30px_rgba(49,93,50,0.05)] transition-all duration-300 hover:border-[#b8df7d] hover:shadow-[0_18px_45px_rgba(49,93,50,0.12)] sm:rounded-[22px]"
+                >
+                  <div className="absolute bottom-0 left-0 top-0 w-1 bg-[#315d32] opacity-0 transition-opacity group-hover:opacity-100" />
 
-                          <span className="shrink-0 rounded-md bg-[#f7f8f2] px-1.5 py-1 text-[7px] font-bold uppercase tracking-wider text-[#667065] sm:px-2 sm:text-[8px]">
-                            {order.payment}
-                          </span>
-                        </div>
+                  <div className="w-full min-w-0 p-3 sm:p-4 lg:p-5">
+                    <div className="flex w-full min-w-0 flex-col">
+                      <div className="flex w-full min-w-0 items-start gap-2.5 sm:gap-3">
+                        <motion.div
+                          whileHover={{
+                            rotate: 5,
+                            scale: 1.08,
+                          }}
+                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#eef5e7] text-[#315d32] transition-all duration-300 group-hover:bg-[#315d32] group-hover:text-white sm:h-11 sm:w-11"
+                        >
+                          <ShoppingBag size={16} />
+                        </motion.div>
 
-                        <p className="mt-1 truncate text-[11px] font-bold text-[#202a20] sm:text-sm">
-                          {order.customer}
-                        </p>
+                        <div className="min-w-0 flex-1 overflow-hidden">
+                          <div className="flex min-w-0 items-center gap-1.5">
+                            <h4 className="min-w-0 flex-1 truncate text-[11px] font-black text-[#202a20] sm:text-sm">
+                              #{order.orderNumber}
+                            </h4>
 
-                        <p className="mt-0.5 truncate text-[9px] text-[#92998e] sm:text-xs">
-                          {order.items}{" "}
-                          {order.items === 1 ? "item" : "items"}
-                          <span className="mx-1.5 text-[#dceacb]">
-                            •
-                          </span>
-                          {order.date}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="mt-3 flex w-full min-w-0 items-center justify-between gap-2 border-t border-[#edf1e9] pt-2.5 sm:mt-4 sm:pt-3 lg:hidden">
-                      <div className="min-w-0">
-                        <p className="text-[7px] font-bold uppercase tracking-widest text-[#92998e] sm:text-[9px]">
-                          Amount
-                        </p>
-
-                        <p className="mt-0.5 text-sm font-black text-[#202a20] sm:text-lg">
-                          ₹{order.amount.toLocaleString()}
-                        </p>
-                      </div>
-
-                      <div className="min-w-0 max-w-[55%]">
-                        <StatusBadge status={order.status} />
-                      </div>
-                    </div>
-
-                    <div className="mt-2.5 grid w-full min-w-0 grid-cols-1 gap-1.5 border-t border-[#edf1e9] pt-2.5 sm:mt-3 sm:gap-2 sm:pt-3 lg:hidden">
-                      <div className="flex min-w-0 items-center gap-1.5">
-                        <MapPin
-                          size={12}
-                          className="shrink-0 text-[#315d32]"
-                        />
-
-                        <span className="min-w-0 truncate text-[9px] text-[#92998e] sm:text-xs">
-                          {order.address}
-                        </span>
-                      </div>
-
-                      <div className="flex min-w-0 items-center gap-1.5">
-                        <Phone
-                          size={12}
-                          className="shrink-0 text-[#315d32]"
-                        />
-
-                        <span className="truncate text-[9px] text-[#92998e] sm:text-xs">
-                          {order.phone}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="hidden lg:flex lg:w-full lg:items-center lg:gap-5">
-                      <div className="min-w-0 flex-1">
-                        <div className="mt-4 flex items-center justify-between gap-5 border-t border-[#edf1e9] pt-3">
-                          <div className="flex min-w-0 items-center gap-2 text-xs text-[#92998e]">
-                            <MapPin
-                              size={13}
-                              className="shrink-0 text-[#315d32]"
-                            />
-
-                            <span className="truncate">
-                              {order.address}
+                            <span className="shrink-0 rounded-md bg-[#f7f8f2] px-1.5 py-1 text-[7px] font-bold uppercase tracking-wider text-[#667065] sm:px-2 sm:text-[8px]">
+                              {getPaymentLabel(
+                                order.paymentMethod
+                              )}
                             </span>
                           </div>
 
-                          <div className="flex shrink-0 items-center gap-2 text-xs font-semibold text-[#92998e]">
-                            <Phone
-                              size={13}
-                              className="text-[#315d32]"
-                            />
-                            {order.phone}
-                          </div>
+                          <p className="mt-1 truncate text-[11px] font-bold text-[#202a20] sm:text-sm">
+                            {getCustomerName(
+                              order
+                            )}
+                          </p>
+
+                          <p className="mt-0.5 truncate text-[9px] text-[#92998e] sm:text-xs">
+                            {itemCount}{" "}
+                            {itemCount === 1
+                              ? "item"
+                              : "items"}
+
+                            <span className="mx-1.5 text-[#dceacb]">
+                              •
+                            </span>
+
+                            {formatDate(
+                              order.createdAt
+                            )}
+                          </p>
                         </div>
                       </div>
 
-                      <div className="flex shrink-0 items-center gap-4">
-                        <div className="text-right">
-                          <p className="text-[9px] font-bold uppercase tracking-widest text-[#92998e]">
+                      <div className="mt-3 flex w-full min-w-0 items-center justify-between gap-2 border-t border-[#edf1e9] pt-2.5 sm:mt-4 sm:pt-3 lg:hidden">
+                        <div className="min-w-0">
+                          <p className="text-[7px] font-bold uppercase tracking-widest text-[#92998e] sm:text-[9px]">
                             Amount
                           </p>
 
-                          <p className="mt-0.5 text-lg font-black text-[#202a20]">
-                            ₹{order.amount.toLocaleString()}
+                          <p className="mt-0.5 text-sm font-black text-[#202a20] sm:text-lg">
+                            ₹
+                            {amount.toLocaleString(
+                              "en-IN"
+                            )}
                           </p>
                         </div>
 
-                        <StatusBadge status={order.status} />
+                        <div className="min-w-0 max-w-[55%]">
+                          <StatusBadge
+                            status={order.status}
+                          />
+                        </div>
+                      </div>
 
-                        <motion.div
-                          whileHover={{
-                            scale: 1.08,
-                            x: 2,
-                          }}
-                          className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#f7f8f2] text-[#92998e] transition-all group-hover:bg-[#eef5e7] group-hover:text-[#315d32]"
-                        >
-                          <ChevronRight size={16} />
-                        </motion.div>
+                      <div className="mt-2.5 grid w-full min-w-0 grid-cols-1 gap-1.5 border-t border-[#edf1e9] pt-2.5 sm:mt-3 sm:gap-2 sm:pt-3 lg:hidden">
+                        <div className="flex min-w-0 items-center gap-1.5">
+                          <MapPin
+                            size={12}
+                            className="shrink-0 text-[#315d32]"
+                          />
+
+                          <span className="min-w-0 truncate text-[9px] text-[#92998e] sm:text-xs">
+                            {getOrderAddress(
+                              order
+                            )}
+                          </span>
+                        </div>
+
+                        <div className="flex min-w-0 items-center gap-1.5">
+                          <Phone
+                            size={12}
+                            className="shrink-0 text-[#315d32]"
+                          />
+
+                          <span className="truncate text-[9px] text-[#92998e] sm:text-xs">
+                            {getCustomerPhone(
+                              order
+                            )}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="hidden lg:flex lg:w-full lg:items-center lg:gap-5">
+                        <div className="min-w-0 flex-1">
+                          <div className="mt-4 flex items-center justify-between gap-5 border-t border-[#edf1e9] pt-3">
+                            <div className="flex min-w-0 items-center gap-2 text-xs text-[#92998e]">
+                              <MapPin
+                                size={13}
+                                className="shrink-0 text-[#315d32]"
+                              />
+
+                              <span className="truncate">
+                                {getOrderAddress(
+                                  order
+                                )}
+                              </span>
+                            </div>
+
+                            <div className="flex shrink-0 items-center gap-2 text-xs font-semibold text-[#92998e]">
+                              <Phone
+                                size={13}
+                                className="text-[#315d32]"
+                              />
+
+                              {getCustomerPhone(
+                                order
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex shrink-0 items-center gap-4">
+                          <div className="text-right">
+                            <p className="text-[9px] font-bold uppercase tracking-widest text-[#92998e]">
+                              Amount
+                            </p>
+
+                            <p className="mt-0.5 text-lg font-black text-[#202a20]">
+                              ₹
+                              {amount.toLocaleString(
+                                "en-IN"
+                              )}
+                            </p>
+                          </div>
+
+                          <StatusBadge
+                            status={order.status}
+                          />
+
+                          <motion.div
+                            whileHover={{
+                              scale: 1.08,
+                              x: 2,
+                            }}
+                            className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#f7f8f2] text-[#92998e] transition-all group-hover:bg-[#eef5e7] group-hover:text-[#315d32]"
+                          >
+                            <ChevronRight
+                              size={16}
+                            />
+                          </motion.div>
+                        </div>
+                      </div>
+
+                      <div className="mt-2 flex justify-end sm:hidden">
+                        <span className="flex items-center gap-1 text-[8px] font-bold text-[#315d32]">
+                          View details
+                          <ChevronRight size={11} />
+                        </span>
                       </div>
                     </div>
-
-                    <div className="mt-2 flex justify-end sm:hidden">
-                      <span className="flex items-center gap-1 text-[8px] font-bold text-[#315d32]">
-                        View details
-                        <ChevronRight size={11} />
-                      </span>
-                    </div>
                   </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
           </motion.div>
         )}
 
         {selectedOrder && (
           <OrderDetailsModal
             order={selectedOrder}
-            onClose={() => setSelectedOrder(null)}
+            onClose={() =>
+              setSelectedOrder(null)
+            }
             onAction={(message) => {
               setSelectedOrder(null);
               showToast(message);
