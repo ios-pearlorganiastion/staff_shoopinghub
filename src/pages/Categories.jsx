@@ -1,3 +1,4 @@
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Search,
@@ -11,9 +12,7 @@ import {
   XCircle,
   RefreshCw,
   Layers3,
-  Boxes,
   Tag,
-  Package,
   ChevronRight,
   X,
   Loader2,
@@ -27,12 +26,7 @@ import {
   deleteCategory,
 } from "../api/categoriesApis";
 
-import { getProducts } from "../api/productApis";
 import { useToast } from "../components/ui/Toast";
-
-/* =========================================================
-   HELPERS (logic unchanged)
-========================================================= */
 
 const slugify = (value) =>
   value
@@ -87,16 +81,11 @@ const itemVariants = {
 const inputClass =
   "h-11 w-full rounded-xl border border-[#dceacb] bg-[#f7f8f2] px-3 text-xs font-semibold text-[#202a20] outline-none transition placeholder:font-normal placeholder:text-[#92998e] sm:text-sm";
 
-/* =========================================================
-   MAIN PAGE
-========================================================= */
-
 export default function Categories() {
   const showToast = useToast();
   const fileInputRef = useRef(null);
 
   const [categories, setCategories] = useState([]);
-  const [productCounts, setProductCounts] = useState({});
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -139,38 +128,15 @@ export default function Categories() {
     }
   };
 
-  const loadProductCounts = async () => {
-    try {
-      const response = await getProducts({ limit: 1000 });
-      const products = normalizeList(response);
-
-      const counts = {};
-
-      products.forEach((product) => {
-        const categoryId =
-          product.categoryId ||
-          product.category?.id ||
-          product.category_id;
-
-        if (!categoryId) return;
-
-        counts[categoryId] = (counts[categoryId] || 0) + 1;
-      });
-
-      setProductCounts(counts);
-    } catch {
-      setProductCounts({});
-    }
-  };
-
   useEffect(() => {
     loadCategories();
-    loadProductCounts();
   }, []);
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([loadCategories(), loadProductCounts()]);
+
+    await loadCategories();
+
     setRefreshing(false);
     showToast("Categories refreshed");
   };
@@ -209,11 +175,6 @@ export default function Categories() {
   const inactiveCategories = categories.filter(
     (category) => category.isActive === false
   ).length;
-
-  const totalProducts = Object.values(productCounts).reduce(
-    (sum, count) => sum + count,
-    0
-  );
 
   const openAddModal = () => {
     setEditingCategory(null);
@@ -326,7 +287,7 @@ export default function Categories() {
 
       setModalOpen(false);
 
-      await Promise.all([loadCategories(), loadProductCounts()]);
+      await loadCategories();
     } catch (err) {
       setFormError(err?.message || "Something went wrong.");
     } finally {
@@ -349,7 +310,7 @@ export default function Categories() {
 
       showToast("Category deleted successfully");
 
-      await Promise.all([loadCategories(), loadProductCounts()]);
+      await loadCategories();
     } catch (err) {
       setDeleteError(err?.message || "Unable to delete category.");
     } finally {
@@ -362,7 +323,9 @@ export default function Categories() {
 
     setCategories((prev) =>
       prev.map((item) =>
-        item.id === category.id ? { ...item, isActive: nextIsActive } : item
+        item.id === category.id
+          ? { ...item, isActive: nextIsActive }
+          : item
       )
     );
 
@@ -408,20 +371,30 @@ export default function Categories() {
       className="box-border w-full min-w-0 max-w-full overflow-x-hidden bg-[#f7f8f2] pb-5 sm:pb-8"
     >
       <div className="mx-auto w-full max-w-[1600px] min-w-0 space-y-3 px-2 sm:space-y-5 sm:px-3 md:px-4 lg:space-y-6 lg:px-5">
-        {/* HERO */}
         <motion.section
           variants={itemVariants}
           className="group relative overflow-hidden rounded-[18px] bg-[#315d32] px-3 py-4 text-white shadow-[0_20px_60px_rgba(49,93,50,0.18)] sm:rounded-[28px] sm:px-6 sm:py-7 lg:px-8 lg:py-8"
         >
           <motion.div
-            animate={{ scale: [1, 1.08, 1], opacity: [0.18, 0.28, 0.18] }}
-            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+            animate={{
+              scale: [1, 1.08, 1],
+              opacity: [0.18, 0.28, 0.18],
+            }}
+            transition={{
+              duration: 5,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
             className="absolute -right-20 -top-24 h-72 w-72 rounded-full bg-[#b8df7d]/20 blur-2xl"
           />
 
           <motion.div
             animate={{ x: [0, 20, 0], y: [0, -10, 0] }}
-            transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+            transition={{
+              duration: 7,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
             className="absolute -bottom-28 left-[28%] h-64 w-64 rounded-full bg-white/10 blur-3xl"
           />
 
@@ -437,7 +410,10 @@ export default function Categories() {
               <div className="min-w-0">
                 <div className="mb-1 flex items-center gap-1.5 sm:mb-1.5 sm:gap-2">
                   <motion.span
-                    animate={{ scale: [1, 1.35, 1], opacity: [0.7, 1, 0.7] }}
+                    animate={{
+                      scale: [1, 1.35, 1],
+                      opacity: [0.7, 1, 0.7],
+                    }}
                     transition={{ duration: 1.8, repeat: Infinity }}
                     className="h-1.5 w-1.5 rounded-full bg-[#b8df7d] sm:h-2 sm:w-2"
                   />
@@ -484,10 +460,9 @@ export default function Categories() {
           </div>
         </motion.section>
 
-        {/* STATS */}
         <motion.div
           variants={pageVariants}
-          className="grid grid-cols-2 gap-2 sm:gap-3 xl:grid-cols-4"
+          className="grid grid-cols-2 gap-2 sm:gap-3 xl:grid-cols-3"
         >
           <StatCard
             label="Total categories"
@@ -510,16 +485,8 @@ export default function Categories() {
             description="Hidden from store"
             danger
           />
-
-          <StatCard
-            label="Products"
-            value={totalProducts}
-            icon={Boxes}
-            description="Across all categories"
-          />
         </motion.div>
 
-        {/* ERROR */}
         {error && (
           <motion.div
             initial={{ opacity: 0, y: 8 }}
@@ -531,7 +498,6 @@ export default function Categories() {
           </motion.div>
         )}
 
-        {/* SEARCH + FILTERS */}
         <motion.section
           variants={itemVariants}
           className="overflow-hidden rounded-[18px] border border-[#dceacb] bg-white shadow-[0_8px_30px_rgba(49,93,50,0.06)] sm:rounded-[24px]"
@@ -586,7 +552,6 @@ export default function Categories() {
           </div>
         </motion.section>
 
-        {/* LIST HEADING */}
         {!loading && (
           <motion.div
             variants={itemVariants}
@@ -596,7 +561,9 @@ export default function Categories() {
               <h3 className="text-[13px] font-black tracking-tight text-[#202a20] sm:text-base">
                 {statusFilter === "all"
                   ? "All Categories"
-                  : `${statusFilter === "active" ? "Active" : "Inactive"} Categories`}
+                  : `${
+                      statusFilter === "active" ? "Active" : "Inactive"
+                    } Categories`}
               </h3>
 
               <p className="mt-0.5 text-[9px] text-[#92998e] sm:text-xs">
@@ -612,7 +579,6 @@ export default function Categories() {
           </motion.div>
         )}
 
-        {/* CONTENT */}
         {loading ? (
           <motion.div
             variants={itemVariants}
@@ -666,7 +632,6 @@ export default function Categories() {
                 key={category.id}
                 category={category}
                 isActive={category.isActive !== false}
-                productCount={productCounts[category.id] || 0}
                 onView={() => openViewModal(category)}
                 onEdit={() => openEditModal(category)}
                 onDelete={() => openDeleteModal(category)}
@@ -677,11 +642,14 @@ export default function Categories() {
         )}
       </div>
 
-      {/* ADD / EDIT MODAL */}
       {modalOpen && (
         <ModalShell
           eyebrow={editingCategory ? "Edit category" : "New category"}
-          title={editingCategory ? editingCategory.name || "Edit category" : "Add category"}
+          title={
+            editingCategory
+              ? editingCategory.name || "Edit category"
+              : "Add category"
+          }
           subtitle={
             editingCategory
               ? "Update category details and catalog settings."
@@ -759,7 +727,10 @@ export default function Categories() {
               />
             </FormField>
 
-            <FormField label="Category photo" hint="Supports JPG, PNG or WEBP.">
+            <FormField
+              label="Category photo"
+              hint="Supports JPG, PNG or WEBP."
+            >
               <div className="rounded-xl border border-[#dceacb] bg-[#f7f8f2] p-3 sm:p-4">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                   {imagePreview ? (
@@ -820,7 +791,10 @@ export default function Categories() {
                     key={label}
                     type="button"
                     onClick={() =>
-                      setForm((prev) => ({ ...prev, isActive: value }))
+                      setForm((prev) => ({
+                        ...prev,
+                        isActive: value,
+                      }))
                     }
                     className={`h-11 rounded-xl text-xs font-bold transition ${
                       form.isActive === value
@@ -837,7 +811,6 @@ export default function Categories() {
         </ModalShell>
       )}
 
-      {/* VIEW MODAL */}
       {viewModalOpen && selectedCategory && (
         <ModalShell
           eyebrow="Category details"
@@ -845,7 +818,9 @@ export default function Categories() {
           subtitle={selectedCategory.slug}
           badge={
             <StatusBadge
-              status={selectedCategory.isActive !== false ? "Active" : "Inactive"}
+              status={
+                selectedCategory.isActive !== false ? "Active" : "Inactive"
+              }
             />
           }
           onClose={() => setViewModalOpen(false)}
@@ -879,35 +854,27 @@ export default function Categories() {
               ) : (
                 <div className="flex flex-col items-center gap-2 text-[#92998e]">
                   <ImageIcon className="h-9 w-9" />
-                  <span className="text-xs font-medium">No category image</span>
+                  <span className="text-xs font-medium">
+                    No category image
+                  </span>
                 </div>
               )}
             </div>
           </div>
 
-          <div className="mt-2.5 grid grid-cols-2 gap-2 sm:mt-3 sm:gap-3">
-            <div className="rounded-xl border border-[#dceacb] bg-[#f7f8f2] p-2.5 sm:p-3">
-              <Tag size={16} className="text-[#315d32]" />
+          <div className="mt-2.5 rounded-xl border border-[#dceacb] bg-[#f7f8f2] p-3 sm:mt-3 sm:p-4">
+            <div className="flex items-start gap-3">
+              <Tag size={16} className="mt-0.5 text-[#315d32]" />
 
-              <p className="mt-2 text-[8px] font-bold uppercase tracking-wider text-[#92998e]">
-                Category
-              </p>
+              <div className="min-w-0">
+                <p className="text-[8px] font-bold uppercase tracking-wider text-[#92998e]">
+                  Category
+                </p>
 
-              <p className="mt-1 truncate text-sm font-black text-[#202a20]">
-                {selectedCategory.name}
-              </p>
-            </div>
-
-            <div className="rounded-xl border border-[#dceacb] bg-[#eef5e7] p-2.5 sm:p-3">
-              <Package size={16} className="text-[#315d32]" />
-
-              <p className="mt-2 text-[8px] font-bold uppercase tracking-wider text-[#315d32]">
-                Products
-              </p>
-
-              <p className="mt-1 text-base font-black text-[#202a20]">
-                {productCounts[selectedCategory.id] || 0}
-              </p>
+                <p className="mt-1 text-sm font-black text-[#202a20]">
+                  {selectedCategory.name}
+                </p>
+              </div>
             </div>
           </div>
 
@@ -923,7 +890,6 @@ export default function Categories() {
         </ModalShell>
       )}
 
-      {/* DELETE MODAL */}
       {deleteModalOpen && selectedCategory && (
         <ModalShell
           eyebrow="Confirm action"
@@ -939,7 +905,11 @@ export default function Categories() {
                 Cancel
               </ModalButton>
 
-              <ModalButton danger onClick={handleDelete} disabled={deleting}>
+              <ModalButton
+                danger
+                onClick={handleDelete}
+                disabled={deleting}
+              >
                 {deleting && <Loader2 size={14} className="animate-spin" />}
                 {deleting ? "Deleting..." : "Delete"}
               </ModalButton>
@@ -979,14 +949,9 @@ export default function Categories() {
   );
 }
 
-/* =========================================================
-   CATEGORY CARD
-========================================================= */
-
 function CategoryCard({
   category,
   isActive,
-  productCount,
   onView,
   onEdit,
   onDelete,
@@ -1009,7 +974,6 @@ function CategoryCard({
 
       <div className="w-full min-w-0 p-3 sm:p-4 lg:p-5">
         <div className="flex w-full min-w-0 flex-col gap-3 lg:flex-row lg:items-center lg:gap-5">
-          {/* Image + content */}
           <div className="flex min-w-0 flex-1 items-start gap-2.5 sm:gap-3.5">
             <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-[#dceacb] bg-[#eef5e7] sm:h-[72px] sm:w-[72px] sm:rounded-2xl">
               {category.imageUrl ? (
@@ -1032,7 +996,9 @@ function CategoryCard({
                 </h4>
 
                 <span className="shrink-0 lg:hidden">
-                  <StatusBadge status={isActive ? "Active" : "Inactive"} />
+                  <StatusBadge
+                    status={isActive ? "Active" : "Inactive"}
+                  />
                 </span>
               </div>
 
@@ -1047,15 +1013,9 @@ function CategoryCard({
               <p className="mt-1.5 line-clamp-2 max-w-2xl text-[10px] leading-4 text-[#92998e] sm:text-xs sm:leading-5">
                 {category.description || "No description available"}
               </p>
-
-              <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-[#eef5e7] px-2.5 py-1 text-[8px] font-bold text-[#315d32] sm:text-[10px]">
-                <Package className="h-3 w-3" />
-                {productCount} {productCount === 1 ? "product" : "products"}
-              </span>
             </div>
           </div>
 
-          {/* Desktop status + actions */}
           <div className="hidden shrink-0 items-center gap-4 lg:flex">
             <button
               type="button"
@@ -1063,12 +1023,24 @@ function CategoryCard({
               title="Click to toggle status"
               className="rounded-full"
             >
-              <StatusBadge status={isActive ? "Active" : "Inactive"} />
+              <StatusBadge
+                status={isActive ? "Active" : "Inactive"}
+              />
             </button>
 
             <div className="flex items-center gap-2">
-              <ActionButton icon={Eye} label="View" onClick={stop(onView)} />
-              <ActionButton icon={Pencil} label="Edit" onClick={stop(onEdit)} />
+              <ActionButton
+                icon={Eye}
+                label="View"
+                onClick={stop(onView)}
+              />
+
+              <ActionButton
+                icon={Pencil}
+                label="Edit"
+                onClick={stop(onEdit)}
+              />
+
               <ActionButton
                 icon={Trash2}
                 label="Delete"
@@ -1082,15 +1054,25 @@ function CategoryCard({
             </div>
           </div>
 
-          {/* Mobile / tablet actions */}
           <div className="grid grid-cols-4 gap-1.5 border-t border-[#edf1e9] pt-2.5 sm:gap-2 sm:pt-3 lg:hidden">
-            <MobileAction icon={Eye} label="View" onClick={stop(onView)} />
-            <MobileAction icon={Pencil} label="Edit" onClick={stop(onEdit)} />
+            <MobileAction
+              icon={Eye}
+              label="View"
+              onClick={stop(onView)}
+            />
+
+            <MobileAction
+              icon={Pencil}
+              label="Edit"
+              onClick={stop(onEdit)}
+            />
+
             <MobileAction
               icon={isActive ? XCircle : CheckCircle2}
               label={isActive ? "Disable" : "Enable"}
               onClick={stop(onToggle)}
             />
+
             <MobileAction
               icon={Trash2}
               label="Delete"
@@ -1103,10 +1085,6 @@ function CategoryCard({
     </motion.div>
   );
 }
-
-/* =========================================================
-   SMALL UI PIECES
-========================================================= */
 
 function StatusBadge({ status }) {
   const Icon = status === "Active" ? CheckCircle2 : XCircle;
@@ -1122,7 +1100,13 @@ function StatusBadge({ status }) {
   );
 }
 
-function StatCard({ label, value, description, icon: Icon, danger = false }) {
+function StatCard({
+  label,
+  value,
+  description,
+  icon: Icon,
+  danger = false,
+}) {
   return (
     <motion.div
       variants={itemVariants}
@@ -1160,7 +1144,12 @@ function StatCard({ label, value, description, icon: Icon, danger = false }) {
   );
 }
 
-function ActionButton({ icon: Icon, label, onClick, danger = false }) {
+function ActionButton({
+  icon: Icon,
+  label,
+  onClick,
+  danger = false,
+}) {
   return (
     <button
       type="button"
@@ -1177,7 +1166,12 @@ function ActionButton({ icon: Icon, label, onClick, danger = false }) {
   );
 }
 
-function MobileAction({ icon: Icon, label, onClick, danger = false }) {
+function MobileAction({
+  icon: Icon,
+  label,
+  onClick,
+  danger = false,
+}) {
   return (
     <button
       type="button"
@@ -1194,17 +1188,28 @@ function MobileAction({ icon: Icon, label, onClick, danger = false }) {
   );
 }
 
-function FormField({ label, required, hint, children }) {
+function FormField({
+  label,
+  required,
+  hint,
+  children,
+}) {
   return (
     <div>
       <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-[#667065]">
         {label}
-        {required && <span className="ml-0.5 text-[#b35a54]">*</span>}
+        {required && (
+          <span className="ml-0.5 text-[#b35a54]">*</span>
+        )}
       </label>
 
       {children}
 
-      {hint && <p className="mt-1 text-[10px] text-[#92998e]">{hint}</p>}
+      {hint && (
+        <p className="mt-1 text-[10px] text-[#92998e]">
+          {hint}
+        </p>
+      )}
     </div>
   );
 }
@@ -1263,14 +1268,25 @@ function ModalShell({
       >
         <div className="relative shrink-0 overflow-hidden bg-[#315d32] px-3.5 py-4 text-white sm:px-6 sm:py-6">
           <motion.div
-            animate={{ scale: [1, 1.08, 1], opacity: [0.15, 0.25, 0.15] }}
-            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+            animate={{
+              scale: [1, 1.08, 1],
+              opacity: [0.15, 0.25, 0.15],
+            }}
+            transition={{
+              duration: 5,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
             className="absolute -right-20 -top-24 h-64 w-64 rounded-full bg-[#b8df7d]/20 blur-2xl"
           />
 
           <motion.div
             animate={{ x: [0, 15, 0], y: [0, -8, 0] }}
-            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+            transition={{
+              duration: 6,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
             className="absolute -bottom-24 left-1/3 h-52 w-52 rounded-full bg-white/10 blur-2xl"
           />
 

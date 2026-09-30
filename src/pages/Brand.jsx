@@ -1,3 +1,4 @@
+
 import { useEffect, useMemo, useState } from "react";
 import {
   Search,
@@ -21,12 +22,7 @@ import {
   updateBrand,
   deleteBrand,
 } from "../api/brandApis";
-import { getProducts } from "../api/productApis";
 import { useToast } from "../components/ui/Toast";
-
-/* =========================================================
-   HELPERS (logic unchanged)
-========================================================= */
 
 const slugify = (value) =>
   value
@@ -80,15 +76,10 @@ const itemVariants = {
 const inputClass =
   "h-11 w-full rounded-xl border border-[#dceacb] bg-[#f7f8f2] px-3 text-xs font-semibold text-[#202a20] outline-none transition placeholder:font-normal placeholder:text-[#92998e] sm:text-sm";
 
-/* =========================================================
-   MAIN PAGE
-========================================================= */
-
 export default function Brand() {
   const showToast = useToast();
 
   const [brands, setBrands] = useState([]);
-  const [productCounts, setProductCounts] = useState({});
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
@@ -116,63 +107,42 @@ export default function Brand() {
     try {
       setLoading(true);
       setError("");
-      setBrands(normalizeList(await getBrands()));
+
+      const response = await getBrands();
+      setBrands(normalizeList(response));
     } catch (err) {
-      setError(err.message);
+      setError(err?.message || "Failed to load brands.");
       setBrands([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const loadProductCounts = async () => {
-    try {
-      const products = normalizeList(
-        await getProducts({
-          limit: 1000,
-        })
-      );
-
-      const counts = {};
-
-      products.forEach((product) => {
-        const brandId = product.brandId || product.brand?.id;
-
-        if (!brandId) return;
-
-        counts[brandId] = (counts[brandId] || 0) + 1;
-      });
-
-      setProductCounts(counts);
-    } catch {
-      setProductCounts({});
-    }
-  };
-
   useEffect(() => {
     loadBrands();
-    loadProductCounts();
   }, []);
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([loadBrands(), loadProductCounts()]);
+
+    await loadBrands();
+
     setRefreshing(false);
     showToast("Brands refreshed");
   };
 
   const filteredBrands = useMemo(() => {
     return brands.filter((brand) => {
-      const name = brand.name || "";
-      const slug = brand.slug || "";
+      const name = brand?.name || "";
+      const slug = brand?.slug || "";
 
-      const searchValue = search.toLowerCase();
+      const searchValue = search.toLowerCase().trim();
 
       const matchesSearch =
         name.toLowerCase().includes(searchValue) ||
         slug.toLowerCase().includes(searchValue);
 
-      const isActive = brand.isActive !== false;
+      const isActive = brand?.isActive !== false;
 
       const matchesStatus =
         statusFilter === "all" ||
@@ -186,17 +156,12 @@ export default function Brand() {
   const totalBrands = brands.length;
 
   const activeBrands = brands.filter(
-    (brand) => brand.isActive !== false
+    (brand) => brand?.isActive !== false
   ).length;
 
   const inactiveBrands = brands.filter(
-    (brand) => brand.isActive === false
+    (brand) => brand?.isActive === false
   ).length;
-
-  const totalProducts = Object.values(productCounts).reduce(
-    (sum, count) => sum + count,
-    0
-  );
 
   const openAddModal = () => {
     setEditingBrand(null);
@@ -210,9 +175,9 @@ export default function Brand() {
     setEditingBrand(brand);
 
     setForm({
-      name: brand.name || "",
-      slug: brand.slug || "",
-      isActive: brand.isActive !== false,
+      name: brand?.name || "",
+      slug: brand?.slug || "",
+      isActive: brand?.isActive !== false,
     });
 
     setSlugTouched(true);
@@ -294,7 +259,7 @@ export default function Brand() {
 
       await loadBrands();
     } catch (err) {
-      setFormError(err.message);
+      setFormError(err?.message || "Something went wrong.");
     } finally {
       setSaving(false);
     }
@@ -317,18 +282,20 @@ export default function Brand() {
 
       await loadBrands();
     } catch (err) {
-      setDeleteError(err.message);
+      setDeleteError(err?.message || "Failed to delete brand.");
     } finally {
       setDeleting(false);
     }
   };
 
   const toggleStatus = async (brand) => {
-    const nextIsActive = !(brand.isActive !== false);
+    const nextIsActive = !(brand?.isActive !== false);
 
     setBrands((prev) =>
       prev.map((item) =>
-        item.id === brand.id ? { ...item, isActive: nextIsActive } : item
+        item.id === brand.id
+          ? { ...item, isActive: nextIsActive }
+          : item
       )
     );
 
@@ -336,14 +303,22 @@ export default function Brand() {
       await updateBrand(brand.id, {
         isActive: nextIsActive,
       });
+
+      showToast(
+        nextIsActive
+          ? "Brand activated successfully"
+          : "Brand deactivated successfully"
+      );
     } catch (err) {
       setBrands((prev) =>
         prev.map((item) =>
-          item.id === brand.id ? { ...item, isActive: brand.isActive } : item
+          item.id === brand.id
+            ? { ...item, isActive: brand.isActive }
+            : item
         )
       );
 
-      showToast(err.message, "error");
+      showToast(err?.message || "Failed to update brand status", "error");
     }
   };
 
@@ -355,20 +330,30 @@ export default function Brand() {
       className="box-border w-full min-w-0 max-w-full overflow-x-hidden bg-[#f7f8f2] pb-5 sm:pb-8"
     >
       <div className="mx-auto w-full max-w-[1600px] min-w-0 space-y-3 px-2 sm:space-y-5 sm:px-3 md:px-4 lg:space-y-6 lg:px-5">
-        {/* HERO */}
         <motion.section
           variants={itemVariants}
           className="group relative overflow-hidden rounded-[18px] bg-[#315d32] px-3 py-4 text-white shadow-[0_20px_60px_rgba(49,93,50,0.18)] sm:rounded-[28px] sm:px-6 sm:py-7 lg:px-8 lg:py-8"
         >
           <motion.div
-            animate={{ scale: [1, 1.08, 1], opacity: [0.18, 0.28, 0.18] }}
-            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+            animate={{
+              scale: [1, 1.08, 1],
+              opacity: [0.18, 0.28, 0.18],
+            }}
+            transition={{
+              duration: 5,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
             className="absolute -right-20 -top-24 h-72 w-72 rounded-full bg-[#b8df7d]/20 blur-2xl"
           />
 
           <motion.div
             animate={{ x: [0, 20, 0], y: [0, -10, 0] }}
-            transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+            transition={{
+              duration: 7,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
             className="absolute -bottom-28 left-[28%] h-64 w-64 rounded-full bg-white/10 blur-3xl"
           />
 
@@ -384,8 +369,14 @@ export default function Brand() {
               <div className="min-w-0">
                 <div className="mb-1 flex items-center gap-1.5 sm:mb-1.5 sm:gap-2">
                   <motion.span
-                    animate={{ scale: [1, 1.35, 1], opacity: [0.7, 1, 0.7] }}
-                    transition={{ duration: 1.8, repeat: Infinity }}
+                    animate={{
+                      scale: [1, 1.35, 1],
+                      opacity: [0.7, 1, 0.7],
+                    }}
+                    transition={{
+                      duration: 1.8,
+                      repeat: Infinity,
+                    }}
                     className="h-1.5 w-1.5 rounded-full bg-[#b8df7d] sm:h-2 sm:w-2"
                   />
 
@@ -431,10 +422,9 @@ export default function Brand() {
           </div>
         </motion.section>
 
-        {/* STATS */}
         <motion.div
           variants={pageVariants}
-          className="grid grid-cols-2 gap-2 sm:gap-3 xl:grid-cols-4"
+          className="grid grid-cols-2 gap-2 sm:gap-3 xl:grid-cols-3"
         >
           <StatCard
             label="Total brands"
@@ -457,16 +447,8 @@ export default function Brand() {
             description="Hidden from store"
             danger
           />
-
-          <StatCard
-            label="Products"
-            value={totalProducts}
-            icon={Package}
-            description="Linked to brands"
-          />
         </motion.div>
 
-        {/* ERROR */}
         {error && (
           <motion.div
             initial={{ opacity: 0, y: 8 }}
@@ -478,7 +460,6 @@ export default function Brand() {
           </motion.div>
         )}
 
-        {/* SEARCH + FILTERS */}
         <motion.section
           variants={itemVariants}
           className="overflow-hidden rounded-[18px] border border-[#dceacb] bg-white shadow-[0_8px_30px_rgba(49,93,50,0.06)] sm:rounded-[24px]"
@@ -533,7 +514,6 @@ export default function Brand() {
           </div>
         </motion.section>
 
-        {/* LIST HEADING */}
         {!loading && (
           <motion.div
             variants={itemVariants}
@@ -543,7 +523,9 @@ export default function Brand() {
               <h3 className="text-[13px] font-black tracking-tight text-[#202a20] sm:text-base">
                 {statusFilter === "all"
                   ? "All Brands"
-                  : `${statusFilter === "active" ? "Active" : "Inactive"} Brands`}
+                  : `${
+                      statusFilter === "active" ? "Active" : "Inactive"
+                    } Brands`}
               </h3>
 
               <p className="mt-0.5 text-[9px] text-[#92998e] sm:text-xs">
@@ -559,7 +541,6 @@ export default function Brand() {
           </motion.div>
         )}
 
-        {/* CONTENT */}
         {loading ? (
           <motion.div
             variants={itemVariants}
@@ -612,8 +593,8 @@ export default function Brand() {
               <BrandCard
                 key={brand.id}
                 brand={brand}
-                isActive={brand.isActive !== false}
-                productCount={productCounts[brand.id] || 0}
+                isActive={brand?.isActive !== false}
+                productCount={0}
                 onView={() => openViewModal(brand)}
                 onEdit={() => openEditModal(brand)}
                 onDelete={() => openDeleteModal(brand)}
@@ -624,11 +605,12 @@ export default function Brand() {
         )}
       </div>
 
-      {/* ADD / EDIT MODAL */}
       {modalOpen && (
         <ModalShell
           eyebrow={editingBrand ? "Edit brand" : "New brand"}
-          title={editingBrand ? editingBrand.name || "Edit brand" : "Add brand"}
+          title={
+            editingBrand ? editingBrand.name || "Edit brand" : "Add brand"
+          }
           subtitle={
             editingBrand
               ? "Update brand details."
@@ -705,7 +687,10 @@ export default function Brand() {
                     key={label}
                     type="button"
                     onClick={() =>
-                      setForm((prev) => ({ ...prev, isActive: value }))
+                      setForm((prev) => ({
+                        ...prev,
+                        isActive: value,
+                      }))
                     }
                     className={`h-11 rounded-xl text-xs font-bold transition ${
                       form.isActive === value
@@ -722,7 +707,6 @@ export default function Brand() {
         </ModalShell>
       )}
 
-      {/* VIEW MODAL */}
       {viewModalOpen && selectedBrand && (
         <ModalShell
           eyebrow="Brand details"
@@ -730,7 +714,9 @@ export default function Brand() {
           subtitle={selectedBrand.slug}
           badge={
             <StatusBadge
-              status={selectedBrand.isActive !== false ? "Active" : "Inactive"}
+              status={
+                selectedBrand.isActive !== false ? "Active" : "Inactive"
+              }
             />
           }
           onClose={() => setViewModalOpen(false)}
@@ -762,7 +748,7 @@ export default function Brand() {
               </p>
 
               <p className="mt-1 text-base font-black text-[#202a20]">
-                {productCounts[selectedBrand.id] || 0}
+                0
               </p>
             </div>
 
@@ -819,7 +805,6 @@ export default function Brand() {
         </ModalShell>
       )}
 
-      {/* DELETE MODAL */}
       {deleteModalOpen && selectedBrand && (
         <ModalShell
           eyebrow="Confirm action"
@@ -835,7 +820,11 @@ export default function Brand() {
                 Cancel
               </ModalButton>
 
-              <ModalButton danger onClick={handleDelete} disabled={deleting}>
+              <ModalButton
+                danger
+                onClick={handleDelete}
+                disabled={deleting}
+              >
                 {deleting && <Loader2 size={14} className="animate-spin" />}
                 {deleting ? "Deleting..." : "Delete"}
               </ModalButton>
@@ -870,10 +859,6 @@ export default function Brand() {
   );
 }
 
-/* =========================================================
-   BRAND CARD
-========================================================= */
-
 function BrandCard({
   brand,
   isActive,
@@ -900,7 +885,6 @@ function BrandCard({
 
       <div className="w-full min-w-0 p-3 sm:p-4 lg:p-5">
         <div className="flex w-full min-w-0 flex-col gap-3 lg:flex-row lg:items-center lg:gap-5">
-          {/* Icon + content */}
           <div className="flex min-w-0 flex-1 items-start gap-2.5 sm:gap-3.5">
             <motion.div
               whileHover={{ rotate: 5, scale: 1.08 }}
@@ -916,7 +900,9 @@ function BrandCard({
                 </h4>
 
                 <span className="shrink-0 lg:hidden">
-                  <StatusBadge status={isActive ? "Active" : "Inactive"} />
+                  <StatusBadge
+                    status={isActive ? "Active" : "Inactive"}
+                  />
                 </span>
               </div>
 
@@ -927,7 +913,8 @@ function BrandCard({
               <div className="mt-2 flex flex-wrap items-center gap-1.5">
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-[#eef5e7] px-2.5 py-1 text-[8px] font-bold text-[#315d32] sm:text-[10px]">
                   <Package className="h-3 w-3" />
-                  {productCount} {productCount === 1 ? "product" : "products"}
+                  {productCount}{" "}
+                  {productCount === 1 ? "product" : "products"}
                 </span>
 
                 <span className="max-w-[150px] truncate rounded-full bg-[#f7f8f2] px-2.5 py-1 text-[8px] font-semibold text-[#92998e] sm:text-[10px]">
@@ -937,7 +924,6 @@ function BrandCard({
             </div>
           </div>
 
-          {/* Desktop status + actions */}
           <div className="hidden shrink-0 items-center gap-4 lg:flex">
             <button
               type="button"
@@ -945,12 +931,24 @@ function BrandCard({
               title="Click to toggle status"
               className="rounded-full"
             >
-              <StatusBadge status={isActive ? "Active" : "Inactive"} />
+              <StatusBadge
+                status={isActive ? "Active" : "Inactive"}
+              />
             </button>
 
             <div className="flex items-center gap-2">
-              <ActionButton icon={Eye} label="View" onClick={stop(onView)} />
-              <ActionButton icon={Pencil} label="Edit" onClick={stop(onEdit)} />
+              <ActionButton
+                icon={Eye}
+                label="View"
+                onClick={stop(onView)}
+              />
+
+              <ActionButton
+                icon={Pencil}
+                label="Edit"
+                onClick={stop(onEdit)}
+              />
+
               <ActionButton
                 icon={Trash2}
                 label="Delete"
@@ -964,15 +962,25 @@ function BrandCard({
             </div>
           </div>
 
-          {/* Mobile / tablet actions */}
           <div className="grid grid-cols-4 gap-1.5 border-t border-[#edf1e9] pt-2.5 sm:gap-2 sm:pt-3 lg:hidden">
-            <MobileAction icon={Eye} label="View" onClick={stop(onView)} />
-            <MobileAction icon={Pencil} label="Edit" onClick={stop(onEdit)} />
+            <MobileAction
+              icon={Eye}
+              label="View"
+              onClick={stop(onView)}
+            />
+
+            <MobileAction
+              icon={Pencil}
+              label="Edit"
+              onClick={stop(onEdit)}
+            />
+
             <MobileAction
               icon={isActive ? XCircle : CheckCircle2}
               label={isActive ? "Disable" : "Enable"}
               onClick={stop(onToggle)}
             />
+
             <MobileAction
               icon={Trash2}
               label="Delete"
@@ -985,10 +993,6 @@ function BrandCard({
     </motion.div>
   );
 }
-
-/* =========================================================
-   SMALL UI PIECES
-========================================================= */
 
 function StatusBadge({ status }) {
   const Icon = status === "Active" ? CheckCircle2 : XCircle;
@@ -1004,7 +1008,13 @@ function StatusBadge({ status }) {
   );
 }
 
-function StatCard({ label, value, description, icon: Icon, danger = false }) {
+function StatCard({
+  label,
+  value,
+  description,
+  icon: Icon,
+  danger = false,
+}) {
   return (
     <motion.div
       variants={itemVariants}
@@ -1042,7 +1052,12 @@ function StatCard({ label, value, description, icon: Icon, danger = false }) {
   );
 }
 
-function ActionButton({ icon: Icon, label, onClick, danger = false }) {
+function ActionButton({
+  icon: Icon,
+  label,
+  onClick,
+  danger = false,
+}) {
   return (
     <button
       type="button"
@@ -1059,7 +1074,12 @@ function ActionButton({ icon: Icon, label, onClick, danger = false }) {
   );
 }
 
-function MobileAction({ icon: Icon, label, onClick, danger = false }) {
+function MobileAction({
+  icon: Icon,
+  label,
+  onClick,
+  danger = false,
+}) {
   return (
     <button
       type="button"
@@ -1076,17 +1096,28 @@ function MobileAction({ icon: Icon, label, onClick, danger = false }) {
   );
 }
 
-function FormField({ label, required, hint, children }) {
+function FormField({
+  label,
+  required,
+  hint,
+  children,
+}) {
   return (
     <div>
       <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-[#667065]">
         {label}
-        {required && <span className="ml-0.5 text-[#b35a54]">*</span>}
+        {required && (
+          <span className="ml-0.5 text-[#b35a54]">*</span>
+        )}
       </label>
 
       {children}
 
-      {hint && <p className="mt-1 text-[10px] text-[#92998e]">{hint}</p>}
+      {hint && (
+        <p className="mt-1 text-[10px] text-[#92998e]">
+          {hint}
+        </p>
+      )}
     </div>
   );
 }
@@ -1137,22 +1168,47 @@ function ModalShell({
       className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-[#202a20]/45 p-2 backdrop-blur-sm sm:p-5"
     >
       <motion.div
-        initial={{ opacity: 0, scale: 0.96, y: 15 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.25, ease: "easeOut" }}
+        initial={{
+          opacity: 0,
+          scale: 0.96,
+          y: 15,
+        }}
+        animate={{
+          opacity: 1,
+          scale: 1,
+          y: 0,
+        }}
+        transition={{
+          duration: 0.25,
+          ease: "easeOut",
+        }}
         onClick={(event) => event.stopPropagation()}
         className="flex max-h-[96vh] w-full max-w-[540px] flex-col overflow-hidden rounded-[18px] border border-[#dceacb] bg-white shadow-[0_25px_80px_rgba(49,93,50,0.2)] sm:max-h-[90vh] sm:rounded-[26px]"
       >
         <div className="relative shrink-0 overflow-hidden bg-[#315d32] px-3.5 py-4 text-white sm:px-6 sm:py-6">
           <motion.div
-            animate={{ scale: [1, 1.08, 1], opacity: [0.15, 0.25, 0.15] }}
-            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+            animate={{
+              scale: [1, 1.08, 1],
+              opacity: [0.15, 0.25, 0.15],
+            }}
+            transition={{
+              duration: 5,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
             className="absolute -right-20 -top-24 h-64 w-64 rounded-full bg-[#b8df7d]/20 blur-2xl"
           />
 
           <motion.div
-            animate={{ x: [0, 15, 0], y: [0, -8, 0] }}
-            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+            animate={{
+              x: [0, 15, 0],
+              y: [0, -8, 0],
+            }}
+            transition={{
+              duration: 6,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
             className="absolute -bottom-24 left-1/3 h-52 w-52 rounded-full bg-white/10 blur-2xl"
           />
 
@@ -1172,12 +1228,21 @@ function ModalShell({
                 </p>
               )}
 
-              {badge && <div className="mt-2.5">{badge}</div>}
+              {badge && (
+                <div className="mt-2.5">
+                  {badge}
+                </div>
+              )}
             </div>
 
             <motion.button
-              whileHover={{ scale: 1.08, rotate: 5 }}
-              whileTap={{ scale: 0.92 }}
+              whileHover={{
+                scale: 1.08,
+                rotate: 5,
+              }}
+              whileTap={{
+                scale: 0.92,
+              }}
               onClick={onClose}
               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/10 text-white transition hover:bg-white/20 sm:h-9 sm:w-9"
             >
