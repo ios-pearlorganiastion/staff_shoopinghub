@@ -153,14 +153,14 @@ export default function Sidebar({
 
             <div className="min-w-0">
               <h1 className="truncate text-[13px] font-black tracking-tight text-[#202a20]">
-                {storeName}
+                CD Shopping Hub
               </h1>
 
               <div className="mt-0.5 flex items-center gap-1">
                 <Sparkles className="h-2.5 w-2.5 text-[#315d32]" />
 
                 <p className="text-[8px] font-black uppercase tracking-[0.16em] text-[#315d32]">
-                  Seller Hub
+                  Customer
                 </p>
               </div>
             </div>

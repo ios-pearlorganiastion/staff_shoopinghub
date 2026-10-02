@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -30,12 +31,15 @@ const itemVariants = {
   show: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.45, ease: "easeOut" },
+    transition: {
+      duration: 0.45,
+      ease: "easeOut",
+    },
   },
 };
 
 const inputWrapClass =
-  "flex h-12 w-full items-center rounded-xl border border-[#dceacb] bg-[#f7f8f2] px-3 transition focus-within:border-[#315d32] focus-within:bg-white focus-within:shadow-[0_0_0_4px_rgba(49,93,50,0.08)]";
+  "flex h-12 w-full min-w-0 items-center rounded-xl border border-[#dceacb] bg-[#f7f8f2] px-3 transition focus-within:border-[#315d32] focus-within:bg-white focus-within:shadow-[0_0_0_4px_rgba(49,93,50,0.08)]";
 
 const inputClass =
   "h-full min-w-0 flex-1 bg-transparent px-2.5 text-sm font-semibold text-[#202a20] outline-none placeholder:font-normal placeholder:text-[#92998e] disabled:opacity-60";
@@ -51,7 +55,10 @@ export default function Login() {
 
   const clearErrorOnChange = (setter) => (e) => {
     setter(e.target.value);
-    if (error) setError("");
+
+    if (error) {
+      setError("");
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -72,7 +79,9 @@ export default function Login() {
       });
 
       if (!response?.success || !response?.data?.accessToken) {
-        throw new Error(response?.message || "Login failed. Please try again.");
+        throw new Error(
+          response?.message || "Login failed. Please try again."
+        );
       }
 
       saveSession({
@@ -80,75 +89,116 @@ export default function Login() {
         staff: response.data.staff,
       });
 
-      navigate("/dashboard", { replace: true });
+      navigate("/dashboard", {
+        replace: true,
+      });
     } catch (err) {
       const message =
         err?.response?.data?.message ||
         err?.message ||
         "Unable to sign in. Please try again.";
 
-      setError(Array.isArray(message) ? message.join(", ") : message);
+      setError(
+        Array.isArray(message)
+          ? message.join(", ")
+          : message
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="relative flex min-h-[100svh] w-full items-center justify-center overflow-x-hidden overflow-y-auto bg-[#f7f8f2] px-3 py-4 sm:px-5 sm:py-8">
-      {/* Page background blobs */}
+    <div className="relative flex min-h-[100dvh] w-full max-w-[100vw] items-center justify-center overflow-hidden bg-[#f7f8f2] px-3 py-4 sm:px-5 sm:py-6">
       <motion.div
-        animate={{ scale: [1, 1.1, 1], opacity: [0.35, 0.55, 0.35] }}
-        transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
-        className="pointer-events-none absolute -left-24 -top-24 h-64 w-64 rounded-full bg-[#b8df7d]/40 blur-3xl sm:h-80 sm:w-80"
+        animate={{
+          scale: [1, 1.1, 1],
+          opacity: [0.35, 0.55, 0.35],
+        }}
+        transition={{
+          duration: 7,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+        className="pointer-events-none absolute -left-24 -top-24 h-64 w-64 max-w-none rounded-full bg-[#b8df7d]/40 blur-3xl sm:h-80 sm:w-80"
       />
 
       <motion.div
-        animate={{ x: [0, -20, 0], y: [0, 15, 0] }}
-        transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
-        className="pointer-events-none absolute -bottom-28 -right-24 h-72 w-72 rounded-full bg-[#315d32]/15 blur-3xl sm:h-96 sm:w-96"
+        animate={{
+          x: [0, -20, 0],
+          y: [0, 15, 0],
+        }}
+        transition={{
+          duration: 9,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+        className="pointer-events-none absolute -bottom-28 -right-24 h-72 w-72 max-w-none rounded-full bg-[#315d32]/15 blur-3xl sm:h-96 sm:w-96"
       />
 
       <motion.div
         variants={pageVariants}
         initial="hidden"
         animate="show"
-        className="relative my-auto w-full max-w-[1020px]"
+        className="relative z-10 w-full min-w-0 max-w-[1020px]"
       >
         <motion.div
           variants={itemVariants}
-          className="grid w-full overflow-hidden rounded-[22px] border border-[#dceacb] bg-white shadow-[0_25px_80px_rgba(49,93,50,0.15)] sm:rounded-[30px] lg:grid-cols-[1fr_1fr]"
+          className="grid w-full min-w-0 overflow-hidden rounded-[22px] border border-[#dceacb] bg-white shadow-[0_25px_80px_rgba(49,93,50,0.15)] sm:rounded-[30px] lg:grid-cols-2"
         >
-          {/* ================= LEFT PANEL (desktop) ================= */}
-          <div className="relative hidden min-h-[620px] overflow-hidden bg-[#315d32] p-8 text-white lg:flex lg:flex-col xl:p-11">
+          <div className="relative hidden min-w-0 overflow-hidden bg-[#315d32] p-8 text-white lg:flex lg:flex-col xl:p-10">
             <motion.div
-              animate={{ scale: [1, 1.08, 1], opacity: [0.18, 0.3, 0.18] }}
-              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute -right-24 -top-28 h-80 w-80 rounded-full bg-[#b8df7d]/25 blur-2xl"
+              animate={{
+                scale: [1, 1.08, 1],
+                opacity: [0.18, 0.3, 0.18],
+              }}
+              transition={{
+                duration: 5,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+              className="pointer-events-none absolute -right-24 -top-28 h-80 w-80 max-w-none rounded-full bg-[#b8df7d]/25 blur-2xl"
             />
 
             <motion.div
-              animate={{ x: [0, 22, 0], y: [0, -12, 0] }}
-              transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute -bottom-32 -left-16 h-72 w-72 rounded-full bg-white/10 blur-3xl"
+              animate={{
+                x: [0, 22, 0],
+                y: [0, -12, 0],
+              }}
+              transition={{
+                duration: 7,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+              className="pointer-events-none absolute -bottom-32 -left-16 h-72 w-72 max-w-none rounded-full bg-white/10 blur-3xl"
             />
 
             <motion.div
-              animate={{ x: [0, -14, 0], y: [0, 10, 0] }}
-              transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute right-[18%] top-[42%] h-28 w-28 rounded-full bg-[#b8df7d]/15 blur-2xl"
+              animate={{
+                x: [0, -14, 0],
+                y: [0, 10, 0],
+              }}
+              transition={{
+                duration: 8,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+              className="pointer-events-none absolute right-[18%] top-[42%] h-28 w-28 max-w-none rounded-full bg-[#b8df7d]/15 blur-2xl"
             />
 
-            {/* Brand */}
-            <div className="relative z-10 flex items-center gap-3">
+            <div className="relative z-10 flex min-w-0 items-center gap-3">
               <motion.div
-                whileHover={{ scale: 1.08, rotate: 4 }}
-                className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-[#315d32] shadow-lg"
+                whileHover={{
+                  scale: 1.08,
+                  rotate: 4,
+                }}
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white text-[#315d32] shadow-lg"
               >
                 <ShoppingBag className="h-5 w-5" />
               </motion.div>
 
-              <div>
-                <h2 className="text-base font-black tracking-tight">
+              <div className="min-w-0">
+                <h2 className="truncate text-base font-black tracking-tight">
                   CD Shopping Hub
                 </h2>
 
@@ -158,20 +208,28 @@ export default function Login() {
               </div>
             </div>
 
-            {/* Hero copy */}
-            <div className="relative z-10 my-auto py-8">
-              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider text-white backdrop-blur">
+            <div className="relative z-10 min-w-0 py-6">
+              <div className="mb-5 inline-flex max-w-full items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider text-white backdrop-blur">
                 <motion.span
-                  animate={{ scale: [1, 1.35, 1], opacity: [0.7, 1, 0.7] }}
-                  transition={{ duration: 1.8, repeat: Infinity }}
-                  className="h-1.5 w-1.5 rounded-full bg-[#b8df7d]"
+                  animate={{
+                    scale: [1, 1.35, 1],
+                    opacity: [0.7, 1, 0.7],
+                  }}
+                  transition={{
+                    duration: 1.8,
+                    repeat: Infinity,
+                  }}
+                  className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#b8df7d]"
                 />
+
                 Store management
               </div>
 
               <h1 className="max-w-[420px] text-3xl font-black leading-[1.12] tracking-tight xl:text-[40px]">
                 Everything your store needs,{" "}
-                <span className="text-[#b8df7d]">in one place.</span>
+                <span className="text-[#b8df7d]">
+                  in one place.
+                </span>
               </h1>
 
               <p className="mt-4 max-w-[380px] text-xs leading-5 text-white/70 xl:text-sm xl:leading-6">
@@ -179,7 +237,7 @@ export default function Login() {
                 one beautiful dashboard.
               </p>
 
-              <div className="mt-8 grid max-w-[420px] grid-cols-2 gap-2.5">
+              <div className="mt-7 grid w-full max-w-[420px] grid-cols-2 gap-2.5">
                 <FeatureCard
                   icon={ShoppingBag}
                   title="Orders"
@@ -206,36 +264,47 @@ export default function Login() {
               </div>
             </div>
 
-            {/* Footer */}
-            <div className="relative z-10 flex items-center justify-between border-t border-white/10 pt-4">
+            <div className="relative z-10 flex min-w-0 items-center justify-between gap-3 border-t border-white/10 pt-4">
               <p className="text-[10px] text-white/50">
                 © 2026 CD Shopping Hub
               </p>
 
-              <div className="flex items-center gap-1.5 text-[10px] font-semibold text-white/60">
+              <div className="flex shrink-0 items-center gap-1.5 text-[10px] font-semibold text-white/60">
                 <ShieldCheck className="h-3.5 w-3.5" />
                 Secure access
               </div>
             </div>
           </div>
 
-          {/* ================= RIGHT PANEL (form) ================= */}
-          <div className="flex w-full flex-col">
-            {/* Mobile / tablet brand banner */}
+          <div className="flex min-w-0 w-full flex-col self-start">
             <div className="relative overflow-hidden bg-[#315d32] px-4 py-4 text-white sm:px-8 sm:py-5 lg:hidden">
               <motion.div
-                animate={{ scale: [1, 1.1, 1], opacity: [0.18, 0.3, 0.18] }}
-                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute -right-16 -top-20 h-48 w-48 rounded-full bg-[#b8df7d]/25 blur-2xl"
+                animate={{
+                  scale: [1, 1.1, 1],
+                  opacity: [0.18, 0.3, 0.18],
+                }}
+                transition={{
+                  duration: 5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+                className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full bg-[#b8df7d]/25 blur-2xl"
               />
 
               <motion.div
-                animate={{ x: [0, 15, 0], y: [0, -8, 0] }}
-                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute -bottom-20 left-1/3 h-40 w-40 rounded-full bg-white/10 blur-2xl"
+                animate={{
+                  x: [0, 15, 0],
+                  y: [0, -8, 0],
+                }}
+                transition={{
+                  duration: 6,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+                className="pointer-events-none absolute -bottom-20 left-1/3 h-40 w-40 rounded-full bg-white/10 blur-2xl"
               />
 
-              <div className="relative flex items-center gap-3">
+              <div className="relative flex min-w-0 items-center gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-[#315d32] shadow-md sm:h-11 sm:w-11">
                   <ShoppingBag className="h-[18px] w-[18px]" />
                 </div>
@@ -250,23 +319,29 @@ export default function Login() {
                   </p>
                 </div>
 
-                <div className="ml-auto hidden items-center gap-1.5 rounded-full border border-white/10 bg-white/10 px-2.5 py-1 text-[9px] font-bold text-white/80 sm:flex">
+                <div className="ml-auto hidden shrink-0 items-center gap-1.5 rounded-full border border-white/10 bg-white/10 px-2.5 py-1 text-[9px] font-bold text-white/80 sm:flex">
                   <Sparkles className="h-3 w-3 text-[#b8df7d]" />
                   Store management
                 </div>
               </div>
             </div>
 
-            <div className="flex flex-1 items-center justify-center px-4 py-7 sm:px-10 sm:py-10 xl:px-14">
+            <div className="flex min-w-0 items-start justify-center px-4 py-6 sm:px-8 sm:py-8 xl:px-12">
               <motion.div
                 variants={pageVariants}
                 initial="hidden"
                 animate="show"
-                className="w-full max-w-[380px]"
+                className="w-full min-w-0 max-w-[380px]"
               >
-                <motion.div variants={itemVariants} className="mb-6">
+                <motion.div
+                  variants={itemVariants}
+                  className="mb-5"
+                >
                   <motion.div
-                    whileHover={{ rotate: 6, scale: 1.06 }}
+                    whileHover={{
+                      rotate: 6,
+                      scale: 1.06,
+                    }}
                     className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#eef5e7] text-[#315d32]"
                   >
                     <LockKeyhole className="h-5 w-5" />
@@ -274,9 +349,15 @@ export default function Login() {
 
                   <div className="mb-1.5 flex items-center gap-2">
                     <motion.span
-                      animate={{ scale: [1, 1.35, 1], opacity: [0.7, 1, 0.7] }}
-                      transition={{ duration: 1.8, repeat: Infinity }}
-                      className="h-1.5 w-1.5 rounded-full bg-[#315d32]"
+                      animate={{
+                        scale: [1, 1.35, 1],
+                        opacity: [0.7, 1, 0.7],
+                      }}
+                      transition={{
+                        duration: 1.8,
+                        repeat: Infinity,
+                      }}
+                      className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#315d32]"
                     />
 
                     <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#92998e]">
@@ -296,14 +377,29 @@ export default function Login() {
                 <AnimatePresence>
                   {error && (
                     <motion.div
-                      initial={{ opacity: 0, y: -8, height: 0 }}
-                      animate={{ opacity: 1, y: 0, height: "auto" }}
-                      exit={{ opacity: 0, y: -8, height: 0 }}
+                      initial={{
+                        opacity: 0,
+                        y: -8,
+                        height: 0,
+                      }}
+                      animate={{
+                        opacity: 1,
+                        y: 0,
+                        height: "auto",
+                      }}
+                      exit={{
+                        opacity: 0,
+                        y: -8,
+                        height: 0,
+                      }}
                       className="overflow-hidden"
                     >
-                      <div className="mb-4 flex w-full items-start gap-2.5 rounded-xl border border-[#efd3d0] bg-[#f8ecea] px-3 py-3 text-[11px] font-semibold leading-4 text-[#b35a54] sm:text-xs">
+                      <div className="mb-4 flex w-full min-w-0 items-start gap-2.5 rounded-xl border border-[#efd3d0] bg-[#f8ecea] px-3 py-3 text-[11px] font-semibold leading-4 text-[#b35a54] sm:text-xs">
                         <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-[#b35a54]" />
-                        <span className="min-w-0 break-words">{error}</span>
+
+                        <span className="min-w-0 break-words">
+                          {error}
+                        </span>
                       </div>
                     </motion.div>
                   )}
@@ -314,9 +410,9 @@ export default function Login() {
                   onSubmit={handleSubmit}
                   autoComplete="off"
                   spellCheck={false}
-                  className="w-full space-y-4"
+                  className="w-full min-w-0 space-y-4"
                 >
-                  <div>
+                  <div className="min-w-0">
                     <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-[#667065]">
                       Username
                     </label>
@@ -335,7 +431,7 @@ export default function Login() {
                     </div>
                   </div>
 
-                  <div>
+                  <div className="min-w-0">
                     <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-[#667065]">
                       Password
                     </label>
@@ -344,7 +440,11 @@ export default function Login() {
                       <LockKeyhole className="h-4 w-4 shrink-0 text-[#92998e]" />
 
                       <input
-                        type={showPassword ? "text" : "password"}
+                        type={
+                          showPassword
+                            ? "text"
+                            : "password"
+                        }
                         autoComplete="new-password"
                         value={password}
                         onChange={clearErrorOnChange(setPassword)}
@@ -355,10 +455,14 @@ export default function Login() {
 
                       <button
                         type="button"
-                        onClick={() => setShowPassword((prev) => !prev)}
+                        onClick={() =>
+                          setShowPassword((prev) => !prev)
+                        }
                         disabled={loading}
                         aria-label={
-                          showPassword ? "Hide password" : "Show password"
+                          showPassword
+                            ? "Hide password"
+                            : "Show password"
                         }
                         className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#92998e] transition hover:bg-[#eef5e7] hover:text-[#315d32] disabled:opacity-50"
                       >
@@ -372,8 +476,16 @@ export default function Login() {
                   </div>
 
                   <motion.button
-                    whileHover={loading ? undefined : { y: -2 }}
-                    whileTap={loading ? undefined : { scale: 0.98 }}
+                    whileHover={
+                      loading
+                        ? undefined
+                        : { y: -2 }
+                    }
+                    whileTap={
+                      loading
+                        ? undefined
+                        : { scale: 0.98 }
+                    }
                     type="submit"
                     disabled={loading}
                     className="group mt-1 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#315d32] px-5 text-xs font-bold text-white shadow-[0_12px_28px_rgba(49,93,50,0.25)] transition hover:bg-[#274d29] disabled:cursor-not-allowed disabled:opacity-70 sm:text-sm"
@@ -394,20 +506,20 @@ export default function Login() {
 
                 <motion.div
                   variants={itemVariants}
-                  className="my-5 flex w-full items-center gap-2.5"
+                  className="my-4 flex w-full items-center gap-2.5"
                 >
-                  <div className="h-px flex-1 bg-[#edf1e9]" />
+                  <div className="h-px min-w-0 flex-1 bg-[#edf1e9]" />
 
                   <span className="shrink-0 text-[8px] font-bold uppercase tracking-[0.16em] text-[#92998e]">
                     Secure login
                   </span>
 
-                  <div className="h-px flex-1 bg-[#edf1e9]" />
+                  <div className="h-px min-w-0 flex-1 bg-[#edf1e9]" />
                 </motion.div>
 
                 <motion.div
                   variants={itemVariants}
-                  className="flex w-full items-start gap-2.5 rounded-xl border border-[#dceacb] bg-[#eef5e7]/60 p-3 sm:p-3.5"
+                  className="flex w-full min-w-0 items-start gap-2.5 rounded-xl border border-[#dceacb] bg-[#eef5e7]/60 p-3 sm:p-3.5"
                 >
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-[#315d32] shadow-sm">
                     <ShieldCheck className="h-4 w-4" />
@@ -427,7 +539,7 @@ export default function Login() {
 
                 <motion.p
                   variants={itemVariants}
-                  className="mt-5 text-center text-[9px] font-medium text-[#92998e]"
+                  className="mt-3 text-center text-[9px] font-medium text-[#92998e]"
                 >
                   Authorized staff access only
                 </motion.p>
@@ -444,19 +556,25 @@ function FeatureCard({ icon: Icon, title, text }) {
   return (
     <motion.div
       whileHover={{ y: -3 }}
-      className="group rounded-xl border border-white/10 bg-white/[0.08] p-3 backdrop-blur transition-colors duration-300 hover:bg-white/[0.14]"
+      className="group min-w-0 rounded-xl border border-white/10 bg-white/[0.08] p-3 backdrop-blur transition-colors duration-300 hover:bg-white/[0.14]"
     >
-      <div className="flex items-center gap-2.5">
+      <div className="flex min-w-0 items-center gap-2.5">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/10 text-[#b8df7d] transition-all duration-300 group-hover:bg-[#b8df7d] group-hover:text-[#315d32]">
           <Icon className="h-4 w-4" />
         </div>
 
         <div className="min-w-0">
-          <p className="text-[11px] font-black text-white">{title}</p>
+          <p className="truncate text-[11px] font-black text-white">
+            {title}
+          </p>
 
-          <p className="mt-0.5 truncate text-[9px] text-white/55">{text}</p>
+          <p className="mt-0.5 truncate text-[9px] text-white/55">
+            {text}
+          </p>
         </div>
       </div>
     </motion.div>
   );
 }
+
+
