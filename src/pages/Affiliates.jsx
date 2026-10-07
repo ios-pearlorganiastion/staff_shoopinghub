@@ -36,7 +36,6 @@ import {
 
 const STATUS_STYLE = {
   PENDING: "bg-[#fff4dc] text-[#a66b00]",
-  REQUESTED: "bg-[#fff4dc] text-[#a66b00]",
   APPROVED: "bg-[#eef5e7] text-[#315d32]",
   REJECTED: "bg-[#f8ecea] text-[#b35a54]",
   SUSPENDED: "bg-[#f1eef8] text-[#70539b]",
@@ -45,7 +44,6 @@ const STATUS_STYLE = {
 
 const STATUS_LABEL = {
   PENDING: "Pending",
-  REQUESTED: "Pending",
   APPROVED: "Approved",
   REJECTED: "Rejected",
   SUSPENDED: "Suspended",
@@ -90,6 +88,7 @@ const normalizeObject = (response) => {
 
 const normalizeList = (response) => {
   if (Array.isArray(response)) return response;
+  if (Array.isArray(response?.data?.items)) return response.data.items;
   if (Array.isArray(response?.data)) return response.data;
   if (Array.isArray(response?.items)) return response.items;
   if (Array.isArray(response?.affiliates)) return response.affiliates;
@@ -123,7 +122,7 @@ const getCustomerName = (item) =>
   item?.user?.name ||
   item?.user?.fullName ||
   item?.name ||
-  "Unknown customer";
+  (item?.customerPhone ? `Customer ${item.customerPhone}` : "Unknown customer");
 
 const getCustomerEmail = (item) =>
   item?.customer?.email ||
@@ -138,7 +137,11 @@ const getReferralCode = (item) =>
   item?.referralCode || item?.code || item?.affiliateCode || "—";
 
 const getChannel = (item) =>
-  item?.channel || item?.application?.channel || "—";
+  item?.primaryChannel ||
+  item?.channel ||
+  item?.application?.primaryChannel ||
+  item?.application?.channel ||
+  "—";
 
 const getAmount = (item) =>
   item?.amount ?? item?.requestedAmount ?? item?.payoutAmount ?? 0;
@@ -285,7 +288,7 @@ export default function Affiliates() {
   const payoutsAwaiting =
     stats?.payoutsAwaiting ??
     stats?.pendingPayouts ??
-    payouts.filter((item) => getAffiliateStatus(item) === "REQUESTED").length;
+    payouts.filter((item) => getAffiliateStatus(item) === "PENDING").length;
 
   const commissionLiability =
     stats?.totalCommissionLiability ??
@@ -1054,9 +1057,9 @@ function AffiliatesTable({ loading, items, onView, onToggle, onAdjust, onPayout 
 
               <CopyField compact value={getReferralCode(item)} />
               <InfoLine label="Referred" value={item.referredCustomers ?? item.referredCount ?? 0} />
-              <InfoLine label="Orders" value={item.orders ?? item.orderCount ?? 0} />
-              <InfoLine label="Revenue" value={formatMoney(item.revenue ?? item.attributedRevenue)} />
-              <InfoLine label="Earned" value={formatMoney(item.earned ?? item.totalEarned)} />
+              <InfoLine label="Orders" value={item.orders ?? item.orderCount ?? item.completedOrdersCount ?? 0} />
+              <InfoLine label="Revenue" value={formatMoney(item.revenue ?? item.attributedRevenue ?? 0)} />
+              <InfoLine label="Earned" value={formatMoney(item.earned ?? item.totalEarned ?? item.balances?.lifetimeEarned ?? 0)} />
 
               <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4 lg:grid-cols-4">
                 <MobileAction icon={Eye} label="View" onClick={() => onView(item)} />
@@ -1264,27 +1267,27 @@ function AffiliateDetailModal({ affiliate, onClose, onAdjust, onToggle }) {
           />
           <MetricBox
             label="Orders"
-            value={affiliate.orders ?? affiliate.orderCount ?? 0}
+            value={affiliate.orders ?? affiliate.orderCount ?? affiliate.completedOrdersCount ?? 0}
             icon={TrendingUp}
           />
           <MetricBox
             label="Revenue"
-            value={formatMoney(affiliate.revenue ?? affiliate.attributedRevenue)}
+            value={formatMoney(affiliate.revenue ?? affiliate.attributedRevenue ?? 0)}
             icon={IndianRupee}
           />
           <MetricBox
             label="Earned"
-            value={formatMoney(affiliate.earned ?? affiliate.totalEarned)}
+            value={formatMoney(affiliate.earned ?? affiliate.totalEarned ?? affiliate.balances?.lifetimeEarned ?? 0)}
             icon={Wallet}
           />
           <MetricBox
             label="Available"
-            value={formatMoney(affiliate.available ?? affiliate.availableBalance)}
+            value={formatMoney(affiliate.available ?? affiliate.availableBalance ?? affiliate.balances?.availableBalance ?? 0)}
             icon={HandCoins}
           />
           <MetricBox
             label="Requested"
-            value={formatMoney(affiliate.requestedPayouts ?? affiliate.pendingPayoutAmount)}
+            value={formatMoney(affiliate.requestedPayouts ?? affiliate.pendingPayoutAmount ?? affiliate.balances?.pendingBalance ?? 0)}
             icon={Clock3}
           />
         </div>
