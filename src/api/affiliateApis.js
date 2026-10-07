@@ -8,7 +8,26 @@ const getErrorMessage = (error, fallback) =>
 
 export const getAffiliates = async (params = {}) => {
   try {
-    const response = await api.get("/affiliates", { params });
+    const {
+      status,
+      search,
+      channel,
+      page,
+      limit,
+      sort,
+    } = params;
+
+    const response = await api.get("/affiliates", {
+      params: {
+        ...(status ? { status } : {}),
+        ...(search ? { search } : {}),
+        ...(channel ? { channel } : {}),
+        ...(page ? { page } : {}),
+        ...(limit ? { limit } : {}),
+        ...(sort ? { sort } : {}),
+      },
+    });
+
     return response.data;
   } catch (error) {
     console.error("Error fetching affiliates:", error);
@@ -101,10 +120,7 @@ export const getAffiliate = async (affiliateId) => {
   }
 };
 
-export const updateAffiliateStatus = async (
-  affiliateId,
-  statusData
-) => {
+export const updateAffiliateStatus = async (affiliateId, statusData) => {
   try {
     const response = await api.patch(
       `/affiliates/${affiliateId}/status`,

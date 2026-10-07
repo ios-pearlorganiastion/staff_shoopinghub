@@ -36,6 +36,7 @@ import {
 
 const STATUS_STYLE = {
   PENDING: "bg-[#fff4dc] text-[#a66b00]",
+  REQUESTED: "bg-[#fff4dc] text-[#a66b00]",
   APPROVED: "bg-[#eef5e7] text-[#315d32]",
   REJECTED: "bg-[#f8ecea] text-[#b35a54]",
   SUSPENDED: "bg-[#f1eef8] text-[#70539b]",
@@ -44,6 +45,7 @@ const STATUS_STYLE = {
 
 const STATUS_LABEL = {
   PENDING: "Pending",
+  REQUESTED: "Pending",
   APPROVED: "Approved",
   REJECTED: "Rejected",
   SUSPENDED: "Suspended",
@@ -192,12 +194,11 @@ export default function Affiliates() {
             search: search.trim() || undefined,
             status: statusFilter !== "all" ? statusFilter : undefined,
             channel: channelFilter !== "all" ? channelFilter : undefined,
-            range: rangeFilter,
           }),
           getAffiliateStats({ range: rangeFilter }),
           getAffiliatePayouts({
             search: search.trim() || undefined,
-            status: activeTab === "payouts" ? undefined : "PENDING",
+            status: activeTab === "payouts" ? undefined : "REQUESTED",
           }),
           getAffiliateReconciliation(),
         ]);
@@ -284,7 +285,7 @@ export default function Affiliates() {
   const payoutsAwaiting =
     stats?.payoutsAwaiting ??
     stats?.pendingPayouts ??
-    payouts.filter((item) => getAffiliateStatus(item) === "PENDING").length;
+    payouts.filter((item) => getAffiliateStatus(item) === "REQUESTED").length;
 
   const commissionLiability =
     stats?.totalCommissionLiability ??
