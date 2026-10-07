@@ -1,3 +1,4 @@
+
 import {
   AlertTriangle,
   ArrowDownRight,
@@ -8,6 +9,7 @@ import {
   ChevronDown,
   CircleDollarSign,
   Clock3,
+  HandCoins,
   MoreHorizontal,
   Package,
   RefreshCw,
@@ -18,8 +20,9 @@ import {
   XCircle,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card } from "../components/ui/Card";
+import { getAffiliateStats } from "../api/affiliateApis";
 
 const dashboardData = {
   stats: [
@@ -254,8 +257,34 @@ export default function Dashboard() {
   const [period, setPeriod] = useState("Last 30 days");
   const [month] = useState("September 2026");
   const [refreshing, setRefreshing] = useState(false);
+  const [affiliateStats, setAffiliateStats] = useState(null);
 
   const maxValue = Math.max(...dashboardData.sales);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadAffiliateStats = async () => {
+      try {
+        const response = await getAffiliateStats();
+        const data = response?.data ?? response;
+
+        if (mounted) {
+          setAffiliateStats(data?.summary ?? data?.stats ?? data ?? null);
+        }
+      } catch (error) {
+        if (mounted) {
+          setAffiliateStats(null);
+        }
+      }
+    };
+
+    loadAffiliateStats();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const handleRefresh = () => {
     setRefreshing(true);
@@ -534,6 +563,107 @@ export default function Dashboard() {
               </motion.div>
             );
           })}
+        </motion.div>
+
+        <motion.div variants={itemVariants}>
+          <Card className="relative overflow-hidden rounded-[20px] border border-[#dceacb] bg-white shadow-[0_8px_30px_rgba(49,93,50,0.06)] transition-all duration-300 hover:border-[#b8df7d] hover:shadow-[0_18px_45px_rgba(49,93,50,0.12)] sm:rounded-[24px]">
+            <div className="absolute -right-12 -top-16 h-40 w-40 rounded-full bg-[#eef5e7] blur-3xl" />
+
+            <div className="relative flex flex-col gap-4 p-3.5 sm:p-5 lg:p-6">
+              <div className="flex min-w-0 items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <motion.div
+                    whileHover={{
+                      rotate: 8,
+                      scale: 1.08,
+                    }}
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#eef5e7] text-[#315d32] shadow-sm sm:h-11 sm:w-11"
+                  >
+                    <HandCoins className="h-5 w-5" />
+                  </motion.div>
+
+                  <div className="min-w-0">
+                    <p className="text-[8px] font-bold uppercase tracking-[0.16em] text-[#92998e] sm:text-[9px]">
+                      Affiliate programme
+                    </p>
+
+                    <h3 className="mt-1 truncate text-[15px] font-black tracking-tight text-[#202a20] sm:text-lg">
+                      Affiliate overview
+                    </h3>
+                  </div>
+                </div>
+
+                <a
+                  href="/affiliates"
+                  className="shrink-0 rounded-lg bg-[#eef5e7] px-3 py-2 text-[8px] font-black text-[#315d32] transition-all duration-200 hover:bg-[#dceacb] hover:shadow-md sm:text-[9px]"
+                >
+                  View programme
+                </a>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <AffiliateMetric
+                  label="Pending"
+                  value={getAffiliateValue(
+                    affiliateStats,
+                    [
+                      "pendingApplications",
+                      "pending_applications",
+                      "pending",
+                      "applicationsPending",
+                    ],
+                    0
+                  )}
+                />
+
+                <AffiliateMetric
+                  label="Approved"
+                  value={getAffiliateValue(
+                    affiliateStats,
+                    [
+                      "approvedAffiliates",
+                      "approved_affiliates",
+                      "approved",
+                      "activeAffiliates",
+                    ],
+                    0
+                  )}
+                />
+
+                <AffiliateMetric
+                  label="Payouts"
+                  value={getAffiliateValue(
+                    affiliateStats,
+                    [
+                      "payoutsAwaiting",
+                      "payouts_awaiting",
+                      "pendingPayouts",
+                      "pending_payouts",
+                      "awaitingPayouts",
+                    ],
+                    0
+                  )}
+                />
+
+                <AffiliateMetric
+                  label="Revenue 30d"
+                  value={formatAffiliateCurrency(
+                    getAffiliateValue(
+                      affiliateStats,
+                      [
+                        "attributedRevenue30d",
+                        "attributed_revenue_30d",
+                        "attributedRevenue",
+                        "revenue30d",
+                        "revenue_30d",
+                      ],
+                      0
+                    )
+                  )}
+                />
+              </div>
+            </div>
+          </Card>
         </motion.div>
 
         <div className="grid min-w-0 grid-cols-1 gap-3.5 sm:gap-5 xl:grid-cols-3">
@@ -1346,6 +1476,47 @@ export default function Dashboard() {
   );
 }
 
+function AffiliateMetric({ label, value }) {
+  return (
+    <motion.div
+      whileHover={{
+        y: -2,
+      }}
+      className="rounded-xl border border-[#edf1e9] bg-[#f7f8f2] p-2.5 transition-all duration-200 hover:border-[#dceacb] sm:p-3"
+    >
+      <p className="truncate text-[7px] font-bold uppercase tracking-[0.08em] text-[#92998e] sm:text-[8px]">
+        {label}
+      </p>
+
+      <p className="mt-1 truncate text-[13px] font-black text-[#202a20] sm:text-sm">
+        {value}
+      </p>
+    </motion.div>
+  );
+}
+
+function getAffiliateValue(source, keys, fallback = 0) {
+  for (const key of keys) {
+    const value = source?.[key];
+
+    if (value !== undefined && value !== null) {
+      return value;
+    }
+  }
+
+  return fallback;
+}
+
+function formatAffiliateCurrency(value) {
+  const amount = Number(value || 0);
+
+  if (!Number.isFinite(amount)) {
+    return "₹0";
+  }
+
+  return `₹${Math.round(amount).toLocaleString("en-IN")}`;
+}
+
 function StatusBadge({ icon: Icon, className, children }) {
   return (
     <motion.span
@@ -1486,3 +1657,4 @@ function MiniAvatar({ name }) {
     </motion.div>
   );
 }
+

@@ -13,6 +13,7 @@ import {
   Store,
   Sparkles,
   ChevronRight,
+  HandCoins,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -24,6 +25,7 @@ const NAV_ITEMS = [
   { label: "Brands", icon: BookMarked, path: "/brand" },
   { label: "Customers", icon: Users, path: "/customers" },
   { label: "Staff", icon: UsersRound, path: "/staff" },
+  { label: "Affiliates", icon: HandCoins, path: "/affiliates" },
 ];
 
 const sidebarVariants = {

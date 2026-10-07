@@ -9,6 +9,7 @@ import Brand from "./pages/Brand";
 import Customers from "./pages/Customers";
 import Staff from "./pages/Staff";
 import Settings from "./pages/Settings";
+import Affiliates from "./pages/Affiliates";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import AppLayout from "./components/layout/AppLayout";
@@ -28,6 +29,7 @@ function App() {
             <Route path="/brand" element={<Brand />} />
             <Route path="/customers" element={<Customers />} />
             <Route path="/staff" element={<Staff />} />
+            <Route path="/affiliates" element={<Affiliates />} />
             <Route path="/settings" element={<Settings />} />
           </Route>
         </Route>
